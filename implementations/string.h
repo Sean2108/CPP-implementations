@@ -24,6 +24,7 @@ namespace implementations {
 		int length() const;
 		bool empty() const;
 		int find(const String& otherString) const;
+		char operator[](const size_t i) const;
 
 		// interators
 		char* begin();

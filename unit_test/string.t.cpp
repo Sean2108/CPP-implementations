@@ -283,3 +283,26 @@ TEST(StringTest, findNoSubstring) {
 	// THEN
 	EXPECT_EQ(-1, index);
 }
+
+TEST(StringTest, IndexAccessorWithinRange) {
+	// GIVEN
+	String str{ "abcd" };
+	size_t index{ 2 };
+
+	// WHEN
+	const char charAtIndex = str[index];
+
+	// THEN
+	EXPECT_EQ('c', charAtIndex);
+}
+
+TEST(StringTest, IndexAccessorOutsideRange) {
+	// GIVEN
+	String str{ "abcd" };
+	size_t index{ 4 };
+
+	// WHEN
+
+	// THEN
+	EXPECT_THROW(str[index], std::runtime_error);
+}

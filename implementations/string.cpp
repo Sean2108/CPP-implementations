@@ -70,6 +70,13 @@ namespace implementations {
 		return m_size - strlen(substring);
 	}
 
+	char String::operator[](const size_t i) const {
+		if (i >= m_size) {
+			throw std::runtime_error("Index out of bounds");
+		}
+		return m_data[i];
+	}
+
 	char* String::begin() {
 		return m_data;
 	}
