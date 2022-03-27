@@ -4,50 +4,47 @@
 #include <cstring>
 #include <stack>
 
-namespace implementations
-{
-	String::String() : String("")
-	{
+namespace implementations {
+	String::String() : String("") {
 	}
 
-	String::String(const char otherChar) : m_size{ 1 }, m_data{ new char[2] }
-	{
+	String::String(const char otherChar)
+		: m_size{ 1 }
+		, m_data{ new char[2] } {
 		m_data[0] = otherChar;
 		m_data[1] = '\0';
 	}
 
-	String::String(const char* otherString) : m_size{ strlen(otherString) }, m_data{ new char[m_size + 1] }
-	{
+	String::String(const char* otherString)
+		: m_size{ strlen(otherString) }
+		, m_data{ new char[m_size + 1] } {
 		if (m_size > 0) {
 			std::copy(otherString, otherString + m_size, m_data);
 		}
 		m_data[m_size] = '\0';
 	}
 
-	String::~String()
-	{
+	String::~String() {
 		delete[] m_data;
 	}
 
-	String::String(const String& otherString) : m_size{ otherString.m_size }, m_data{ new char[m_size + 1] }
-	{
+	String::String(const String& otherString)
+		: m_size{ otherString.m_size }
+		, m_data{ new char[m_size + 1] } {
 		std::copy(otherString.m_data, otherString.m_data + m_size + 1, m_data);
 	}
 
-	String::String(String&& otherString) noexcept : String{}
-	{
+	String::String(String&& otherString) noexcept : String{} {
 		swap(*this, otherString);
 	}
 
-	String& String::operator=(const String& otherString)
-	{
+	String& String::operator=(const String& otherString) {
 		String temp{ otherString };
 		swap(*this, temp);
 		return *this;
 	}
 
-	String& String::operator=(String&& otherString) noexcept
-	{
+	String& String::operator=(String&& otherString) noexcept {
 		swap(*this, otherString);
 		return *this;
 	}
@@ -57,18 +54,15 @@ namespace implementations
 		return *this;
 	}
 
-	int String::length() const
-	{
+	int String::length() const {
 		return m_size;
 	}
 
-	bool String::empty() const
-	{
+	bool String::empty() const {
 		return m_size == 0;
 	}
 
-	int String::find(const String& otherString) const
-	{
+	int String::find(const String& otherString) const {
 		char* substring = strstr(m_data, otherString.m_data);
 		if (!substring) {
 			return -1;
@@ -76,28 +70,23 @@ namespace implementations
 		return m_size - strlen(substring);
 	}
 
-	char* String::begin()
-	{
+	char* String::begin() {
 		return m_data;
 	}
 
-	char* String::end()
-	{
+	char* String::end() {
 		return m_data + m_size;
 	}
 
-	char* String::cbegin() const
-	{
+	char* String::cbegin() const {
 		return m_data;
 	}
 
-	char* String::cend() const
-	{
+	char* String::cend() const {
 		return m_data + m_size;
 	}
 
-	int stoi(const String& string)
-	{
+	int stoi(const String& string) {
 		int outputNumber = 0;
 		if (string.empty()) {
 			throw std::invalid_argument("String is empty");
@@ -147,30 +136,25 @@ namespace implementations
 		return newStringObj;
 	}
 
-	bool operator==(const String& a, const String& b)
-	{
+	bool operator==(const String& a, const String& b) {
 		return a.m_size == b.m_size && strcmp(a.m_data, b.m_data) == 0;
 	}
 
-	bool operator!=(const String& a, const String& b)
-	{
+	bool operator!=(const String& a, const String& b) {
 		return !(a == b);
 	}
 
-	void swap(String& a, String& b) noexcept
-	{
+	void swap(String& a, String& b) noexcept {
 		std::swap(a.m_size, b.m_size);
 		std::swap(a.m_data, b.m_data);
 	}
 
-	std::ostream& operator<<(std::ostream& stream, const String& s)
-	{
+	std::ostream& operator<<(std::ostream& stream, const String& s) {
 		stream << s.m_data;
 		return stream;
 	}
 
-	String operator+(const String& a, const String& b)
-	{
+	String operator+(const String& a, const String& b) {
 		size_t newLength = a.length() + b.length() + 1;
 		char* newString = new char[newLength];
 		std::copy(a.m_data, a.m_data + a.m_size, newString);

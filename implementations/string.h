@@ -1,12 +1,9 @@
-#ifndef IMPLEMENTATIONS_STRING
-#define IMPLEMENTATIONS_STRING
+#pragma once
 
 #include <ostream>
 
-namespace implementations
-{
-	class String
-	{
+namespace implementations {
+	class String {
 		size_t m_size;
 		char* m_data;
 
@@ -46,5 +43,3 @@ namespace implementations
 	};
 	String toString(int number);
 } // namespace implementations
-
-#endif

@@ -4,8 +4,7 @@
 
 using namespace implementations;
 
-TEST(StringTest, DefaultConstructor)
-{
+TEST(StringTest, DefaultConstructor) {
 	// GIVEN
 	std::ostringstream stream;
 
@@ -19,8 +18,7 @@ TEST(StringTest, DefaultConstructor)
 	EXPECT_EQ("", stream.str());
 }
 
-TEST(StringTest, CharConstructor)
-{
+TEST(StringTest, CharConstructor) {
 	// GIVEN
 	std::ostringstream stream;
 
@@ -34,8 +32,7 @@ TEST(StringTest, CharConstructor)
 	EXPECT_EQ("a", stream.str());
 }
 
-TEST(StringTest, CStringConstructor)
-{
+TEST(StringTest, CStringConstructor) {
 	// GIVEN
 	std::ostringstream stream;
 
@@ -49,8 +46,7 @@ TEST(StringTest, CStringConstructor)
 	EXPECT_EQ("test", stream.str());
 }
 
-TEST(StringTest, CopyAssignment)
-{
+TEST(StringTest, CopyAssignment) {
 	// GIVEN
 	String overridenString{ "test" };
 	String overridingString{ "test2" };
@@ -65,8 +61,7 @@ TEST(StringTest, CopyAssignment)
 	EXPECT_EQ(overridenString, overridingString);
 }
 
-TEST(StringTest, CopyConstructor)
-{
+TEST(StringTest, CopyConstructor) {
 	// GIVEN
 	String overridingString{ "test2" };
 
@@ -80,8 +75,7 @@ TEST(StringTest, CopyConstructor)
 	EXPECT_EQ("test2", newString);
 }
 
-TEST(StringTest, MoveAssignment)
-{
+TEST(StringTest, MoveAssignment) {
 	// GIVEN
 	String overridenString{ "test" };
 	String overridingString{ "test2" };
@@ -94,8 +88,7 @@ TEST(StringTest, MoveAssignment)
 	EXPECT_EQ("test2", overridenString);
 }
 
-TEST(StringTest, MoveConstructor)
-{
+TEST(StringTest, MoveConstructor) {
 	// GIVEN
 	String overridingString{ "test2" };
 
@@ -107,8 +100,7 @@ TEST(StringTest, MoveConstructor)
 	EXPECT_EQ("test2", newString);
 }
 
-TEST(StringTest, Addition)
-{
+TEST(StringTest, Addition) {
 	// GIVEN
 	String stringA{ "test" };
 	String stringB{ "test2" };
@@ -122,8 +114,7 @@ TEST(StringTest, Addition)
 	EXPECT_EQ("test2", stringB);
 }
 
-TEST(StringTest, EqualityOperator)
-{
+TEST(StringTest, EqualityOperator) {
 	// GIVEN
 	String stringA{ "test" };
 	String stringB{ "test2" };
@@ -138,8 +129,7 @@ TEST(StringTest, EqualityOperator)
 	EXPECT_FALSE(stringA != stringC);
 }
 
-TEST(StringTest, IncrementOperator)
-{
+TEST(StringTest, IncrementOperator) {
 	// GIVEN
 	String stringA{ "test" };
 	String stringB{ "test2" };
@@ -152,8 +142,7 @@ TEST(StringTest, IncrementOperator)
 	EXPECT_EQ("test2", stringB);
 }
 
-TEST(StringTest, NonConstIterators)
-{
+TEST(StringTest, NonConstIterators) {
 	// GIVEN
 	String string{ "abcd" };
 
@@ -164,8 +153,7 @@ TEST(StringTest, NonConstIterators)
 	EXPECT_EQ("dcba", string);
 }
 
-TEST(StringTest, ConstIterators)
-{
+TEST(StringTest, ConstIterators) {
 	// GIVEN
 	String string{ "test" };
 
@@ -177,8 +165,7 @@ TEST(StringTest, ConstIterators)
 	EXPECT_EQ("test", stream.str());
 }
 
-TEST(StringTest, stoiPositiveNumber)
-{
+TEST(StringTest, stoiPositiveNumber) {
 	// GIVEN
 	String string{ "123" };
 
@@ -189,8 +176,7 @@ TEST(StringTest, stoiPositiveNumber)
 	EXPECT_EQ(123, outputNumber);
 }
 
-TEST(StringTest, stoiNegativeNumber)
-{
+TEST(StringTest, stoiNegativeNumber) {
 	// GIVEN
 	String string{ "-123" };
 
@@ -201,8 +187,7 @@ TEST(StringTest, stoiNegativeNumber)
 	EXPECT_EQ(-123, outputNumber);
 }
 
-TEST(StringTest, stoiInvalidNumberThrows)
-{
+TEST(StringTest, stoiInvalidNumberThrows) {
 	// GIVEN
 	String string{ "abc" };
 
@@ -212,8 +197,7 @@ TEST(StringTest, stoiInvalidNumberThrows)
 	EXPECT_THROW(stoi(string), std::invalid_argument);
 }
 
-TEST(StringTest, stoiIntegerOverflowThrows)
-{
+TEST(StringTest, stoiIntegerOverflowThrows) {
 	// GIVEN
 	String string{ "12345678901234567890" };
 
@@ -223,8 +207,7 @@ TEST(StringTest, stoiIntegerOverflowThrows)
 	EXPECT_THROW(stoi(string), std::runtime_error);
 }
 
-TEST(StringTest, stoiNegativeButNoNumbersThrows)
-{
+TEST(StringTest, stoiNegativeButNoNumbersThrows) {
 	// GIVEN
 	String string{ "-" };
 
@@ -234,8 +217,7 @@ TEST(StringTest, stoiNegativeButNoNumbersThrows)
 	EXPECT_THROW(stoi(string), std::invalid_argument);
 }
 
-TEST(StringTest, stoiEmptyStringThrows)
-{
+TEST(StringTest, stoiEmptyStringThrows) {
 	// GIVEN
 	String string{ "" };
 
@@ -245,8 +227,7 @@ TEST(StringTest, stoiEmptyStringThrows)
 	EXPECT_THROW(stoi(string), std::invalid_argument);
 }
 
-TEST(StringTest, toStringPositiveNumber)
-{
+TEST(StringTest, toStringPositiveNumber) {
 	// GIVEN
 	int num = 123;
 
@@ -257,8 +238,7 @@ TEST(StringTest, toStringPositiveNumber)
 	EXPECT_EQ("123", res);
 }
 
-TEST(StringTest, toStringNegativeNumber)
-{
+TEST(StringTest, toStringNegativeNumber) {
 	// GIVEN
 	int num = -123;
 
@@ -269,8 +249,7 @@ TEST(StringTest, toStringNegativeNumber)
 	EXPECT_EQ("-123", res);
 }
 
-TEST(StringTest, toStringZero)
-{
+TEST(StringTest, toStringZero) {
 	// GIVEN
 	int num = 0;
 
@@ -281,8 +260,7 @@ TEST(StringTest, toStringZero)
 	EXPECT_EQ("0", res);
 }
 
-TEST(StringTest, findHasSubstring)
-{
+TEST(StringTest, findHasSubstring) {
 	// GIVEN
 	String haystack{ "abcd" };
 	String needle{ "cd" };
@@ -294,8 +272,7 @@ TEST(StringTest, findHasSubstring)
 	EXPECT_EQ(2, index);
 }
 
-TEST(StringTest, findNoSubstring)
-{
+TEST(StringTest, findNoSubstring) {
 	// GIVEN
 	String haystack{ "abcd" };
 	String needle{ "ce" };
