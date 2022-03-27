@@ -296,6 +296,18 @@ TEST(StringTest, IndexAccessorWithinRange) {
 	EXPECT_EQ('c', charAtIndex);
 }
 
+TEST(StringTest, IndexAccessorWithinRangeChangeCharacter) {
+	// GIVEN
+	String str{ "abcd" };
+	size_t index{ 2 };
+
+	// WHEN
+	str[index] = 'z';
+
+	// THEN
+	EXPECT_EQ("abzd", str);
+}
+
 TEST(StringTest, IndexAccessorOutsideRange) {
 	// GIVEN
 	String str{ "abcd" };
@@ -305,4 +317,44 @@ TEST(StringTest, IndexAccessorOutsideRange) {
 
 	// THEN
 	EXPECT_THROW(str[index], std::runtime_error);
+}
+
+TEST(StringTest, push_backAtMaxCapacity) {
+	// GIVEN
+	String str{ "abcd" };
+
+	// WHEN
+	str.push_back('e');
+
+	// THEN
+	EXPECT_EQ("abcde", str);
+	EXPECT_EQ(5, str.length());
+	EXPECT_EQ(10, str.capacity());
+}
+
+TEST(StringTest, push_backNotAtMaxCapacity) {
+	// GIVEN
+	String str{ "abcd" };
+
+	// WHEN
+	str.reserve(6);
+	str.push_back('e');
+
+	// THEN
+	EXPECT_EQ("abcde", str);
+	EXPECT_EQ(5, str.length());
+	EXPECT_EQ(6, str.capacity());
+}
+
+TEST(StringTest, pop_back) {
+	// GIVEN
+	String str{ "abcd" };
+
+	// WHEN
+	str.pop_back();
+
+	// THEN
+	EXPECT_EQ("abc", str);
+	EXPECT_EQ(3, str.length());
+	EXPECT_EQ(5, str.capacity());
 }

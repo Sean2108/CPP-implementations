@@ -10,6 +10,7 @@ namespace implementations {
 
 	String::String(const char otherChar)
 		: m_size{ 1 }
+		, m_capacity{ m_size + 1 }
 		, m_data{ new char[2] } {
 		m_data[0] = otherChar;
 		m_data[1] = '\0';
@@ -17,6 +18,7 @@ namespace implementations {
 
 	String::String(const char* otherString)
 		: m_size{ strlen(otherString) }
+		, m_capacity{ m_size + 1 }
 		, m_data{ new char[m_size + 1] } {
 		if (m_size > 0) {
 			std::copy(otherString, otherString + m_size, m_data);
@@ -30,6 +32,7 @@ namespace implementations {
 
 	String::String(const String& otherString)
 		: m_size{ otherString.m_size }
+		, m_capacity{ m_size + 1 }
 		, m_data{ new char[m_size + 1] } {
 		std::copy(otherString.m_data, otherString.m_data + m_size + 1, m_data);
 	}
@@ -54,8 +57,12 @@ namespace implementations {
 		return *this;
 	}
 
-	int String::length() const {
+	size_t String::length() const {
 		return m_size;
+	}
+
+	size_t String::capacity() const {
+		return m_capacity;
 	}
 
 	bool String::empty() const {
@@ -70,11 +77,34 @@ namespace implementations {
 		return m_size - strlen(substring);
 	}
 
-	char String::operator[](const size_t i) const {
+	char& String::operator[](const size_t i) const {
 		if (i >= m_size) {
 			throw std::runtime_error("Index out of bounds");
 		}
 		return m_data[i];
+	}
+
+	void String::push_back(const char c) {
+		if (m_size + 1 == m_capacity) {
+			reserve(m_capacity * 2);
+		}
+		m_data[m_size++] = c;
+		m_data[m_size] = '\0';
+	}
+
+	void String::pop_back() {
+		m_data[--m_size] = '\0';
+	}
+
+	void String::reserve(const size_t newCapacity) {
+		if (m_capacity < newCapacity) {
+			m_capacity = newCapacity;
+			char* newString = new char[m_capacity];
+			std::copy(m_data, m_data + m_size, newString);
+			std::swap(newString, m_data);
+			delete[] newString;
+			m_data[m_size] = '\0';
+		}
 	}
 
 	char* String::begin() {
@@ -153,6 +183,7 @@ namespace implementations {
 
 	void swap(String& a, String& b) noexcept {
 		std::swap(a.m_size, b.m_size);
+		std::swap(a.m_capacity, b.m_capacity);
 		std::swap(a.m_data, b.m_data);
 	}
 

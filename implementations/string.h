@@ -5,6 +5,7 @@
 namespace implementations {
 	class String {
 		size_t m_size;
+		size_t m_capacity;
 		char* m_data;
 
 	public:
@@ -21,10 +22,16 @@ namespace implementations {
 		String& operator=(String&& otherString) noexcept;
 		String& operator+=(const String& otherString);
 
-		int length() const;
+		size_t length() const;
+		size_t capacity() const;
 		bool empty() const;
 		int find(const String& otherString) const;
-		char operator[](const size_t i) const;
+		char& operator[](const size_t i) const;
+
+		// modifiers
+		void push_back(const char c);
+		void pop_back();
+		void reserve(const size_t capacity);
 
 		// interators
 		char* begin();
