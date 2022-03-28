@@ -115,11 +115,11 @@ namespace implementations {
 		return m_data + m_size;
 	}
 
-	char* String::cbegin() const {
+	const char* String::cbegin() const {
 		return m_data;
 	}
 
-	char* String::cend() const {
+	const char* String::cend() const {
 		return m_data + m_size;
 	}
 
@@ -138,8 +138,8 @@ namespace implementations {
 				throw std::invalid_argument("String contains non-numerical characters");
 			}
 			const size_t digit = string.m_data[i] - '0';
-			if (outputNumber > INT_MAX / 10 || (outputNumber == INT_MAX / 10 && digit > 7)) {
-				throw std::runtime_error("Integer overflow/underflow");
+			if (outputNumber * 10 < outputNumber) {
+				throw std::runtime_error("Integer overflow");
 			}
 			outputNumber = outputNumber * 10 + digit;
 		}

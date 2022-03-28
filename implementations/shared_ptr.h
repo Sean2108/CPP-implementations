@@ -5,11 +5,11 @@
 namespace implementations {
 
 	template <class T>
-	class SharedPtr
-	{
+	class SharedPtr {
 		T* m_underlyingPtr;
 		size_t* m_refCount;
 	public:
+		// constructors and assignment operators
 		SharedPtr(T* ptr = nullptr);
 		SharedPtr(const SharedPtr<T>& ptr);
 		SharedPtr(SharedPtr<T>&& ptr) noexcept;
@@ -17,6 +17,7 @@ namespace implementations {
 		SharedPtr& operator=(SharedPtr<T>&& ptr) noexcept;
 		~SharedPtr();
 
+		// getters
 		T* get() const noexcept;
 		T* operator->() noexcept;
 		T& operator*() noexcept;
@@ -25,6 +26,7 @@ namespace implementations {
 		size_t useCount() noexcept;
 		void reset() noexcept;
 
+		// free functions
 		template <class Type, class ...Args>
 		friend SharedPtr<Type> makeShared(Args&&... args);
 

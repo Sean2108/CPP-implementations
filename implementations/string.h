@@ -36,8 +36,8 @@ namespace implementations {
 		// interators
 		char* begin();
 		char* end();
-		char* cbegin() const;
-		char* cend() const;
+		const char* cbegin() const;
+		const char* cend() const;
 
 		// binary operators
 		friend std::ostream& operator<<(std::ostream& stream, const String& s);
