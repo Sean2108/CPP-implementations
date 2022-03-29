@@ -33,8 +33,7 @@ namespace implementations {
 		void clear();
 		void reserve(const size_t capacity);
 		void push_back(T newObj);
-		templatke <class ...Args>
-		templatke <class ...Args>
+		template <class ...Args>
 		void emplace_back(Args&&... args);
 		void pop_back();
 		T* erase(T* position);
