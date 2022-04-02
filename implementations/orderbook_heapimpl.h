@@ -8,12 +8,16 @@
 #include <vector>
 
 namespace implementations {
+	/*
+	* insertion time complexity - worst case O(nlogn) (eg 1 buy order fills all sell orders)
+	* query quantity for price time complexity - O(1)
+	*/
 	class OrderBookHeapImpl : public OrderBook
 	{
-		std::priority_queue<Order> buyOrdersMaxHeap;
-		std::priority_queue<Order, std::vector<Order>, std::greater<Order>> sellOrdersMinHeap;
-		std::unordered_map<size_t, size_t> quantityAtBidPrice;
-		std::unordered_map<size_t, size_t> quantityAtAskPrice;
+		std::priority_queue<Order> m_buyOrdersMaxHeap;
+		std::priority_queue<Order, std::vector<Order>, std::greater<Order>> m_sellOrdersMinHeap;
+		std::unordered_map<size_t, size_t> m_quantityAtBidPrice;
+		std::unordered_map<size_t, size_t> m_quantityAtAskPrice;
 	public:
 		OrderBookHeapImpl();
 
