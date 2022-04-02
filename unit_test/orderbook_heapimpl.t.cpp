@@ -5,17 +5,29 @@
 
 using namespace implementations;
 
-TEST(OrderBookHeapImplTest, addBuyOrderNoMatch) {
+class OrderBookTest :public ::testing::TestWithParam<std::shared_ptr<OrderBook>> {
+protected:
+	std::shared_ptr<OrderBook> orderbook;
+};
+
+INSTANTIATE_TEST_CASE_P(
+	OrderBookParameterizedTest,
+	OrderBookTest,
+	::testing::Values(
+		std::make_shared<OrderBookHeapImpl>()
+		));
+
+TEST_P(OrderBookTest, addBuyOrderNoMatch) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addSellOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 101, 200, 2 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 102, 400, 3 }).empty());
-	std::vector<Order> matchedBuy = orderbook.addBuyOrder({ 99, 100, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addSellOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 101, 200, 2 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 102, 400, 3 }).empty());
+	std::vector<Order> matchedBuy = orderbook->addBuyOrder({ 99, 100, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	EXPECT_TRUE(matchedBuy.empty());
@@ -25,20 +37,20 @@ TEST(OrderBookHeapImplTest, addBuyOrderNoMatch) {
 	ASSERT_TRUE(bestBuy.has_value());
 	EXPECT_EQ(99, bestBuy.value().price);
 	EXPECT_EQ(100, bestBuy.value().quantity);
-	EXPECT_EQ(400, orderbook.getQuantityAtAskPrice(102));
+	EXPECT_EQ(400, orderbook->getQuantityAtAskPrice(102));
 }
 
-TEST(OrderBookHeapImplTest, addBuyOrderFillMultiplePrices) {
+TEST_P(OrderBookTest, addBuyOrderFillMultiplePrices) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addSellOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 101, 300, 2 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 102, 400, 3 }).empty());
-	std::vector<Order> matchedBuy = orderbook.addBuyOrder({ 101, 100, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addSellOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 101, 300, 2 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 102, 400, 3 }).empty());
+	std::vector<Order> matchedBuy = orderbook->addBuyOrder({ 101, 100, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	ASSERT_TRUE(1, matchedBuy.size());
@@ -51,18 +63,18 @@ TEST(OrderBookHeapImplTest, addBuyOrderFillMultiplePrices) {
 	EXPECT_FALSE(bestBuy.has_value());
 }
 
-TEST(OrderBookHeapImplTest, addBuyOrderFillUseEarliestTimestamp) {
+TEST_P(OrderBookTest, addBuyOrderFillUseEarliestTimestamp) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addSellOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 100, 300, 2 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 100, 400, 3 }).empty());
-	EXPECT_EQ(900, orderbook.getQuantityAtAskPrice(100));
-	std::vector<Order> matchedBuy = orderbook.addBuyOrder({ 101, 100, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addSellOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 100, 300, 2 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 100, 400, 3 }).empty());
+	EXPECT_EQ(900, orderbook->getQuantityAtAskPrice(100));
+	std::vector<Order> matchedBuy = orderbook->addBuyOrder({ 101, 100, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	ASSERT_TRUE(1, matchedBuy.size());
@@ -73,20 +85,20 @@ TEST(OrderBookHeapImplTest, addBuyOrderFillUseEarliestTimestamp) {
 	EXPECT_EQ(100, bestSell.value().price);
 	EXPECT_EQ(100, bestSell.value().quantity);
 	EXPECT_FALSE(bestBuy.has_value());
-	EXPECT_EQ(800, orderbook.getQuantityAtAskPrice(100));
+	EXPECT_EQ(800, orderbook->getQuantityAtAskPrice(100));
 }
 
-TEST(OrderBookHeapImplTest, addBuyOrderPartialFill) {
+TEST_P(OrderBookTest, addBuyOrderPartialFill) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addSellOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 101, 300, 2 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 102, 400, 3 }).empty());
-	std::vector<Order> matchedBuy = orderbook.addBuyOrder({ 101, 700, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addSellOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 101, 300, 2 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 102, 400, 3 }).empty());
+	std::vector<Order> matchedBuy = orderbook->addBuyOrder({ 101, 700, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	ASSERT_TRUE(2, matchedBuy.size());
@@ -104,17 +116,17 @@ TEST(OrderBookHeapImplTest, addBuyOrderPartialFill) {
 	EXPECT_EQ(200, bestBuy.value().quantity);
 }
 
-TEST(OrderBookHeapImplTest, addBuyOrderFillAllSells) {
+TEST_P(OrderBookTest, addBuyOrderFillAllSells) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addSellOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 101, 300, 2 }).empty());
-	EXPECT_TRUE(orderbook.addSellOrder({ 102, 400, 3 }).empty());
-	std::vector<Order> matchedBuy = orderbook.addBuyOrder({ 102, 1000, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addSellOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 101, 300, 2 }).empty());
+	EXPECT_TRUE(orderbook->addSellOrder({ 102, 400, 3 }).empty());
+	std::vector<Order> matchedBuy = orderbook->addBuyOrder({ 102, 1000, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	ASSERT_TRUE(3, matchedBuy.size());
@@ -133,17 +145,17 @@ TEST(OrderBookHeapImplTest, addBuyOrderFillAllSells) {
 	EXPECT_EQ(100, bestBuy.value().quantity);
 }
 
-TEST(OrderBookHeapImplTest, addSellOrderNoMatch) {
+TEST_P(OrderBookTest, addSellOrderNoMatch) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addBuyOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 99, 200, 2 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 98, 400, 3 }).empty());
-	std::vector<Order> matchedSell = orderbook.addSellOrder({ 101, 100, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addBuyOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 99, 200, 2 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 98, 400, 3 }).empty());
+	std::vector<Order> matchedSell = orderbook->addSellOrder({ 101, 100, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	EXPECT_TRUE(matchedSell.empty());
@@ -153,20 +165,20 @@ TEST(OrderBookHeapImplTest, addSellOrderNoMatch) {
 	ASSERT_TRUE(bestBuy.has_value());
 	EXPECT_EQ(100, bestBuy.value().price);
 	EXPECT_EQ(200, bestBuy.value().quantity);
-	EXPECT_EQ(400, orderbook.getQuantityAtBidPrice(98));
+	EXPECT_EQ(400, orderbook->getQuantityAtBidPrice(98));
 }
 
-TEST(OrderBookHeapImplTest, addSellOrderFillMultiplePrices) {
+TEST_P(OrderBookTest, addSellOrderFillMultiplePrices) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addBuyOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 99, 300, 2 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 98, 400, 3 }).empty());
-	std::vector<Order> matchedSell = orderbook.addSellOrder({ 100, 100, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addBuyOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 99, 300, 2 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 98, 400, 3 }).empty());
+	std::vector<Order> matchedSell = orderbook->addSellOrder({ 100, 100, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	ASSERT_TRUE(1, matchedSell.size());
@@ -179,18 +191,18 @@ TEST(OrderBookHeapImplTest, addSellOrderFillMultiplePrices) {
 	EXPECT_FALSE(bestSell.has_value());
 }
 
-TEST(OrderBookHeapImplTest, addSellOrderFillUseEarliestTimestamp) {
+TEST_P(OrderBookTest, addSellOrderFillUseEarliestTimestamp) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addBuyOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 100, 300, 2 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 100, 400, 3 }).empty());
-	EXPECT_EQ(900, orderbook.getQuantityAtBidPrice(100));
-	std::vector<Order> matchedSell = orderbook.addSellOrder({ 99, 100, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addBuyOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 100, 300, 2 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 100, 400, 3 }).empty());
+	EXPECT_EQ(900, orderbook->getQuantityAtBidPrice(100));
+	std::vector<Order> matchedSell = orderbook->addSellOrder({ 99, 100, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	ASSERT_TRUE(1, matchedSell.size());
@@ -201,20 +213,20 @@ TEST(OrderBookHeapImplTest, addSellOrderFillUseEarliestTimestamp) {
 	EXPECT_EQ(100, bestBuy.value().price);
 	EXPECT_EQ(100, bestBuy.value().quantity);
 	EXPECT_FALSE(bestSell.has_value());
-	EXPECT_EQ(800, orderbook.getQuantityAtBidPrice(100));
+	EXPECT_EQ(800, orderbook->getQuantityAtBidPrice(100));
 }
 
-TEST(OrderBookHeapImplTest, addSellOrderPartialFill) {
+TEST_P(OrderBookTest, addSellOrderPartialFill) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addBuyOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 99, 300, 2 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 98, 400, 3 }).empty());
-	std::vector<Order> matchedSell = orderbook.addSellOrder({ 99, 700, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addBuyOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 99, 300, 2 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 98, 400, 3 }).empty());
+	std::vector<Order> matchedSell = orderbook->addSellOrder({ 99, 700, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	ASSERT_TRUE(2, matchedSell.size());
@@ -232,17 +244,17 @@ TEST(OrderBookHeapImplTest, addSellOrderPartialFill) {
 	EXPECT_EQ(400, bestBuy.value().quantity);
 }
 
-TEST(OrderBookHeapImplTest, addSellOrderFillAllSells) {
+TEST_P(OrderBookTest, addSellOrderFillAllSells) {
 	// GIVEN
-	OrderBookHeapImpl orderbook;
+	std::shared_ptr<OrderBook> orderbook = GetParam();
 
 	// WHEN
-	EXPECT_TRUE(orderbook.addBuyOrder({ 100, 200, 1 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 99, 300, 2 }).empty());
-	EXPECT_TRUE(orderbook.addBuyOrder({ 98, 400, 3 }).empty());
-	std::vector<Order> matchedSell = orderbook.addSellOrder({ 98, 1000, 4 });
-	std::optional<Order> bestSell = orderbook.getBestAskOrder();
-	std::optional<Order> bestBuy = orderbook.getBestBidOrder();
+	EXPECT_TRUE(orderbook->addBuyOrder({ 100, 200, 1 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 99, 300, 2 }).empty());
+	EXPECT_TRUE(orderbook->addBuyOrder({ 98, 400, 3 }).empty());
+	std::vector<Order> matchedSell = orderbook->addSellOrder({ 98, 1000, 4 });
+	std::optional<Order> bestSell = orderbook->getBestAskOrder();
+	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
 	ASSERT_TRUE(3, matchedSell.size());
