@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "../implementations/orderbook_heapimpl.cpp"
+#include "../implementations/orderbook_linkedlistmapimpl.cpp"
 #include "../implementations/orderbook.cpp"
 
 using namespace implementations;
@@ -14,7 +15,8 @@ INSTANTIATE_TEST_CASE_P(
 	OrderBookParameterizedTest,
 	OrderBookTest,
 	::testing::Values(
-		std::make_shared<OrderBookHeapImpl>()
+		std::make_shared<OrderBookHeapImpl>(),
+		std::make_shared<OrderBookLinkedListMapImpl>()
 		));
 
 TEST_P(OrderBookTest, addBuyOrderNoMatch) {
