@@ -4,13 +4,16 @@
 
 #include <optional>
 #include <queue>
+#include <unordered_map>
 #include <vector>
 
 namespace implementations {
 	class OrderBookHeapImpl : public OrderBook
 	{
-		std::priority_queue<Order, std::vector<Order>> buyOrdersMaxHeap;
+		std::priority_queue<Order> buyOrdersMaxHeap;
 		std::priority_queue<Order, std::vector<Order>, std::greater<Order>> sellOrdersMinHeap;
+		std::unordered_map<size_t, size_t> quantityAtBidPrice;
+		std::unordered_map<size_t, size_t> quantityAtAskPrice;
 	public:
 		OrderBookHeapImpl();
 

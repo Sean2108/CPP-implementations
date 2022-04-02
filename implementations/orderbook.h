@@ -11,8 +11,8 @@ namespace implementations {
 
 		Order(size_t price, size_t quantity, size_t timestamp);
 		friend bool operator<(const Order& order1, const Order& order2);
+		friend bool operator>(const Order& order1, const Order& order2);
 	};
-	bool operator>(const Order& order1, const Order& order2);
 	bool operator<=(const Order& order1, const Order& order2);
 	bool operator>=(const Order& order1, const Order& order2);
 
