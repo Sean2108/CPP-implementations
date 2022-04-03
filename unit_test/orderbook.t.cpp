@@ -17,7 +17,7 @@ INSTANTIATE_TEST_CASE_P(
 	::testing::Values(
 		std::make_shared<OrderBookHeapImpl>(),
 		std::make_shared<OrderBookLinkedListMapImpl>()
-		));
+	));
 
 TEST_P(OrderBookTest, addBuyOrderNoMatch) {
 	// GIVEN
@@ -55,7 +55,7 @@ TEST_P(OrderBookTest, addBuyOrderFillMultiplePrices) {
 	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
-	ASSERT_TRUE(1, matchedBuy.size());
+	ASSERT_EQ(1, matchedBuy.size());
 	EXPECT_EQ(100, matchedBuy[0].price);
 	EXPECT_EQ(100, matchedBuy[0].quantity);
 	EXPECT_EQ(1, matchedBuy[0].timestamp);
@@ -79,7 +79,7 @@ TEST_P(OrderBookTest, addBuyOrderFillUseEarliestTimestamp) {
 	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
-	ASSERT_TRUE(1, matchedBuy.size());
+	ASSERT_EQ(1, matchedBuy.size());
 	EXPECT_EQ(100, matchedBuy[0].price);
 	EXPECT_EQ(100, matchedBuy[0].quantity);
 	EXPECT_EQ(1, matchedBuy[0].timestamp);
@@ -103,7 +103,7 @@ TEST_P(OrderBookTest, addBuyOrderPartialFill) {
 	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
-	ASSERT_TRUE(2, matchedBuy.size());
+	ASSERT_EQ(2, matchedBuy.size());
 	EXPECT_EQ(100, matchedBuy[0].price);
 	EXPECT_EQ(200, matchedBuy[0].quantity);
 	EXPECT_EQ(1, matchedBuy[0].timestamp);
@@ -131,7 +131,7 @@ TEST_P(OrderBookTest, addBuyOrderFillAllSells) {
 	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
-	ASSERT_TRUE(3, matchedBuy.size());
+	ASSERT_EQ(3, matchedBuy.size());
 	EXPECT_EQ(100, matchedBuy[0].price);
 	EXPECT_EQ(200, matchedBuy[0].quantity);
 	EXPECT_EQ(1, matchedBuy[0].timestamp);
@@ -183,7 +183,7 @@ TEST_P(OrderBookTest, addSellOrderFillMultiplePrices) {
 	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
-	ASSERT_TRUE(1, matchedSell.size());
+	ASSERT_EQ(1, matchedSell.size());
 	EXPECT_EQ(100, matchedSell[0].price);
 	EXPECT_EQ(100, matchedSell[0].quantity);
 	EXPECT_EQ(1, matchedSell[0].timestamp);
@@ -207,7 +207,7 @@ TEST_P(OrderBookTest, addSellOrderFillUseEarliestTimestamp) {
 	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
-	ASSERT_TRUE(1, matchedSell.size());
+	ASSERT_EQ(1, matchedSell.size());
 	EXPECT_EQ(100, matchedSell[0].price);
 	EXPECT_EQ(100, matchedSell[0].quantity);
 	EXPECT_EQ(1, matchedSell[0].timestamp);
@@ -231,7 +231,7 @@ TEST_P(OrderBookTest, addSellOrderPartialFill) {
 	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
-	ASSERT_TRUE(2, matchedSell.size());
+	ASSERT_EQ(2, matchedSell.size());
 	EXPECT_EQ(100, matchedSell[0].price);
 	EXPECT_EQ(200, matchedSell[0].quantity);
 	EXPECT_EQ(1, matchedSell[0].timestamp);
@@ -259,7 +259,7 @@ TEST_P(OrderBookTest, addSellOrderFillAllSells) {
 	std::optional<Order> bestBuy = orderbook->getBestBidOrder();
 
 	// THEN
-	ASSERT_TRUE(3, matchedSell.size());
+	ASSERT_EQ(3, matchedSell.size());
 	EXPECT_EQ(100, matchedSell[0].price);
 	EXPECT_EQ(200, matchedSell[0].quantity);
 	EXPECT_EQ(1, matchedSell[0].timestamp);

@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <optional>
+#include <unordered_map>
 
 namespace implementations {
 	struct Order {
@@ -16,16 +17,21 @@ namespace implementations {
 	bool operator<=(const Order& order1, const Order& order2);
 	bool operator>=(const Order& order1, const Order& order2);
 
+	using QuantityPriceMap = std::unordered_map<size_t, size_t>;
+
 	class OrderBook {
+	protected:
+		QuantityPriceMap m_quantityAtBidPrice, m_quantityAtAskPrice;
 	public:
-		virtual std::vector<Order> addBuyOrder(Order order) = 0;
-		virtual std::vector<Order> addSellOrder(Order order) = 0;
+		OrderBook();
+		virtual std::vector<Order> addBuyOrder(Order&& order) = 0;
+		virtual std::vector<Order> addSellOrder(Order&& order) = 0;
 
 		virtual std::optional<Order> getBestBidOrder() const = 0;
 		virtual std::optional<Order> getBestAskOrder() const = 0;
 
-		virtual size_t getQuantityAtBidPrice(const size_t price) const = 0;
-		virtual size_t getQuantityAtAskPrice(const size_t price) const = 0;
+		size_t getQuantityAtBidPrice(const size_t price) const;
+		size_t getQuantityAtAskPrice(const size_t price) const;
 	};
 }
 

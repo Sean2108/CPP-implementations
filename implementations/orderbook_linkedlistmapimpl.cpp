@@ -6,87 +6,72 @@ namespace implementations {
 		, next(nullptr) {}
 
 	OrderBookLinkedListMapImpl::OrderBookLinkedListMapImpl()
-		: m_buyOrders()
+		: OrderBook()
+		, m_buyOrders()
 		, m_sellOrders() {}
 
-	std::vector<Order> OrderBookLinkedListMapImpl::addBuyOrder(Order order) {
+	std::vector<Order> OrderBookLinkedListMapImpl::getMatchedOrders(Order& order, LinkedListMap& matchingOrders, QuantityPriceMap& matchingQuantityMap, const bool isBuy) {
 		std::vector<Order> matchedOrders;
-		while (!m_sellOrders.empty() && 
-			m_sellOrders.begin()->second->price <= order.price) {
-			OrderNodePtr matchedSellPtr = m_sellOrders.begin()->second;
+		while (!matchingOrders.empty() &&
+			// compare against largest buy or smallest sell, depending on the side
+			(isBuy && matchingOrders.begin()->second->price <= order.price
+				|| !isBuy && matchingOrders.rbegin()->second->price >= order.price)) {
+			OrderNodePtr matchedOrderPtr = isBuy ? matchingOrders.begin()->second : matchingOrders.rbegin()->second;
 			// partial fill
-			if (order.quantity < matchedSellPtr->quantity) {
-				matchedSellPtr->quantity -= order.quantity;
-				matchedOrders.emplace_back(matchedSellPtr->price, order.quantity, matchedSellPtr->timestamp);
+			if (order.quantity < matchedOrderPtr->quantity) {
+				const size_t newQuantity = matchedOrderPtr->quantity - order.quantity;
+				matchedOrderPtr->quantity = order.quantity;
+				matchedOrders.push_back(*matchedOrderPtr);
+				matchedOrderPtr->quantity = newQuantity;
+				matchingQuantityMap[matchedOrderPtr->price] -= order.quantity;
 				order.quantity = 0;
 				break;
 			}
 			else {
-				order.quantity -= matchedSellPtr->quantity;
-				if (!matchedSellPtr->next) {
-					m_sellOrders.erase(m_sellOrders.begin());
+				order.quantity -= matchedOrderPtr->quantity;
+				matchingQuantityMap[matchedOrderPtr->price] -= matchedOrderPtr->quantity;
+				if (!matchedOrderPtr->next) {
+					matchingOrders.erase(isBuy ? matchingOrders.begin() : std::next(m_buyOrders.rbegin()).base());
 				}
 				else {
-					m_sellOrders.begin()->second = matchedSellPtr->next;
+					matchingOrders.begin()->second = matchedOrderPtr->next;
 				}
-				matchedOrders.push_back(std::move(*matchedSellPtr));
-			}
-		}
-		if (order.quantity > 0) {
-			const size_t price = order.price;
-			auto it = m_buyOrders.find(price);
-			const OrderNodePtr newOrderNode = std::make_shared<OrderNode>(std::move(order));
-			if (it != m_buyOrders.cend()) {
-				OrderNodePtr currentNode = it->second;
-				while (currentNode && currentNode->next) {
-					currentNode = currentNode->next;
-				}
-				currentNode->next = newOrderNode;
-			}
-			else {
-				m_buyOrders.emplace(order.price, newOrderNode);
+				matchedOrders.push_back(std::move(*matchedOrderPtr));
 			}
 		}
 		return matchedOrders;
 	}
 
-	std::vector<Order> OrderBookLinkedListMapImpl::addSellOrder(Order order) {
-		std::vector<Order> matchedOrders;
-		while (!m_buyOrders.empty() &&
-			m_buyOrders.rbegin()->second->price >= order.price) {
-			OrderNodePtr matchedBuyPtr = m_buyOrders.rbegin()->second;
-			// partial fill
-			if (order.quantity < matchedBuyPtr->quantity) {
-				matchedBuyPtr->quantity -= order.quantity;
-				matchedOrders.emplace_back(matchedBuyPtr->price, order.quantity, matchedBuyPtr->timestamp);
-				order.quantity = 0;
-				break;
+	void OrderBookLinkedListMapImpl::addOrderNode(Order&& order, LinkedListMap& sideMap) {
+		const size_t price = order.price;
+		auto it = sideMap.find(price);
+		const OrderNodePtr newOrderNode = std::make_shared<OrderNode>(std::move(order));
+		if (it != sideMap.cend()) {
+			OrderNodePtr currentNode = it->second;
+			while (currentNode && currentNode->next) {
+				currentNode = currentNode->next;
 			}
-			else {
-				order.quantity -= matchedBuyPtr->quantity;
-				if (!matchedBuyPtr->next) {
-					m_buyOrders.erase(std::next(m_buyOrders.rbegin()).base());
-				}
-				else {
-					m_buyOrders.rbegin()->second = matchedBuyPtr->next;
-				}
-				matchedOrders.push_back(std::move(*matchedBuyPtr));
-			}
+			currentNode->next = std::move(newOrderNode);
 		}
+		else {
+			sideMap.emplace(price, std::move(newOrderNode));
+		}
+	}
+
+	std::vector<Order> OrderBookLinkedListMapImpl::addBuyOrder(Order&& order) {
+		const std::vector<Order> matchedOrders = getMatchedOrders(order, m_sellOrders, m_quantityAtAskPrice, true);
 		if (order.quantity > 0) {
-			const size_t price = order.price;
-			auto it = m_sellOrders.find(price);
-			const OrderNodePtr newOrderNode = std::make_shared<OrderNode>(std::move(order));
- 			if (it != m_sellOrders.cend()) {
-				OrderNodePtr currentNode = it->second;
-				while (currentNode && currentNode->next) {
-					currentNode = currentNode->next;
-				}
-				currentNode->next = newOrderNode;
-			}
-			else {
-				m_sellOrders.emplace(order.price, newOrderNode);
-			}
+			m_quantityAtBidPrice[order.price] += order.quantity;
+			addOrderNode(std::move(order), m_buyOrders);
+		}
+		return matchedOrders;
+	}
+
+	std::vector<Order> OrderBookLinkedListMapImpl::addSellOrder(Order&& order) {
+		const std::vector<Order> matchedOrders = getMatchedOrders(order, m_buyOrders, m_quantityAtBidPrice, false);
+		if (order.quantity > 0) {
+			m_quantityAtAskPrice[order.price] += order.quantity;
+			addOrderNode(std::move(order), m_sellOrders);
 		}
 		return matchedOrders;
 	}
@@ -103,31 +88,5 @@ namespace implementations {
 			return {};
 		}
 		return *(m_sellOrders.begin()->second);
-	}
-
-	size_t OrderBookLinkedListMapImpl::getQuantityAtBidPrice(const size_t price) const {
-		const auto it = m_buyOrders.find(price);
-		size_t totalQuantity = 0;
-		if (it != m_buyOrders.cend()) {
-			OrderNodePtr currentNode = it->second;
-			while (currentNode) {
-				totalQuantity += currentNode->quantity;
-				currentNode = currentNode->next;
-			}
-		}
-		return totalQuantity;
-	}
-
-	size_t OrderBookLinkedListMapImpl::getQuantityAtAskPrice(const size_t price) const {
-		const auto it = m_sellOrders.find(price);
-		size_t totalQuantity = 0;
-		if (it != m_sellOrders.cend()) {
-			OrderNodePtr currentNode = it->second;
-			while (currentNode) {
-				totalQuantity += currentNode->quantity;
-				currentNode = currentNode->next;
-			}
-		}
-		return totalQuantity;
 	}
 }
