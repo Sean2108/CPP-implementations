@@ -41,7 +41,8 @@ namespace implementations {
 
 		std::shared_ptr<File> makeFile(std::string&& pathToNewFile, const bool isDirectory, const bool shouldCreateMissingDirectories = false);
 		std::shared_ptr<Directory> changeDirectory(std::string&& path);
-		void removeFile(std::string&& pathToRemove);
+		std::shared_ptr<File> removeFile(std::string&& pathToRemove);
+		std::shared_ptr<File> moveFile(std::string&& sourcePath, std::string&& destPath);
 	};
 }
 

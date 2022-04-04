@@ -109,7 +109,7 @@ namespace implementations {
 		return m_pwd = getDirectory(tokenisePath(std::move(path)), false);
 	}
 
-	void FileSystem::removeFile(std::string&& pathToRemove) {
+	std::shared_ptr<FileSystem::File> FileSystem::removeFile(std::string&& pathToRemove) {
 		SplitPath splitPath = tokenisePath(std::move(pathToRemove));
 		const std::string fileToRemove = splitPath.back();
 		if (fileToRemove.empty()) {
@@ -119,14 +119,41 @@ namespace implementations {
 		std::shared_ptr<Directory> dirToRemoveFrom = getDirectory(std::move(splitPath), false);
 		const auto& removeDirIt = dirToRemoveFrom->childDirs.find(fileToRemove);
 		if (removeDirIt != dirToRemoveFrom->childDirs.cend()) {
+			const std::shared_ptr<Directory> removedDir = removeDirIt->second;
 			dirToRemoveFrom->childDirs.erase(removeDirIt);
-			return;
+			return removedDir;
 		}
 		const auto& removeFileIt = dirToRemoveFrom->files.find(fileToRemove);
 		if (removeFileIt != dirToRemoveFrom->files.cend()) {
+			const std::shared_ptr<File> removedFile = removeFileIt->second;
 			dirToRemoveFrom->files.erase(removeFileIt);
-			return;
+			return removedFile;
 		}
 		throw std::invalid_argument(fileToRemove + " does not exist");
+	}
+
+	std::shared_ptr<FileSystem::File> FileSystem::moveFile(std::string&& sourcePath, std::string&& destPath) {
+		SplitPath splitPath = tokenisePath(std::move(destPath));
+		const std::string destFile = splitPath.back();
+		if (destFile.empty()) {
+			throw std::invalid_argument("Move destination path is invalid");
+		}
+		splitPath.pop_back();
+		std::shared_ptr<Directory> moveDestDir = getDirectory(std::move(splitPath), false);
+		if (moveDestDir->childDirs.find(destFile) == moveDestDir->childDirs.cend()
+			&& moveDestDir->files.find(destFile) == moveDestDir->files.cend()) {
+			const std::shared_ptr<File> removedFile = removeFile(std::move(sourcePath));
+			removedFile->name = destFile;
+			if (removedFile->isDirectory()) {
+				moveDestDir->childDirs.emplace(destFile, dynamic_pointer_cast<Directory>(removedFile));
+			}
+			else {
+				moveDestDir->files.emplace(destFile, removedFile);
+			}
+			return removedFile;
+		}
+		else {
+			throw std::invalid_argument(destFile + " already exists");
+		}
 	}
 }

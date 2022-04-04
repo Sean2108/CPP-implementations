@@ -104,3 +104,20 @@ TEST(FileSystemTest, RemoveFile) {
 	EXPECT_TRUE(pwd->childDirs["test"]->files.find("test1.txt") != pwd->childDirs["test"]->files.cend());
 	EXPECT_TRUE(pwd->childDirs["test"]->files.find("test2.txt") == pwd->childDirs["test"]->files.cend());
 }
+
+TEST(FileSystemTest, MoveDirectory) {
+	// GIVEN
+	FileSystem filesystem;
+
+	// WHEN
+	filesystem.makeFile("test/test1.txt", false, true);
+	filesystem.makeFile("test/subtest/test1.txt", false, true);
+	filesystem.moveFile("test/subtest", "/test2");
+	const auto pwd = filesystem.getPwd();
+
+	// THEN
+	ASSERT_EQ(2, pwd->childDirs.size());
+	EXPECT_TRUE(pwd->childDirs["test"]->childDirs.empty());
+	EXPECT_TRUE(pwd->childDirs.find("test2") != pwd->childDirs.cend());
+	EXPECT_TRUE(pwd->childDirs["test2"]->files.find("test1.txt") != pwd->childDirs["test2"]->files.cend());
+}
