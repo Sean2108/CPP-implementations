@@ -118,6 +118,24 @@ TEST(FileSystemTest, MoveDirectory) {
 	// THEN
 	ASSERT_EQ(2, pwd->childDirs.size());
 	EXPECT_TRUE(pwd->childDirs["test"]->childDirs.empty());
-	EXPECT_TRUE(pwd->childDirs.find("test2") != pwd->childDirs.cend());
+	ASSERT_TRUE(pwd->childDirs.find("test2") != pwd->childDirs.cend());
+	EXPECT_TRUE(pwd->childDirs["test2"]->files.find("test1.txt") != pwd->childDirs["test2"]->files.cend());
+}
+
+TEST(FileSystemTest, CopyDirectory) {
+	// GIVEN
+	FileSystem filesystem;
+
+	// WHEN
+	filesystem.makeFile("test/test1.txt", false, true);
+	filesystem.makeFile("test/subtest/test1.txt", false, true);
+	filesystem.copyFile("test/subtest", "/test2");
+	const auto pwd = filesystem.getPwd();
+
+	// THEN
+	ASSERT_EQ(2, pwd->childDirs.size());
+	ASSERT_EQ(1, pwd->childDirs["test"]->childDirs.size());
+	EXPECT_TRUE(pwd->childDirs["test"]->childDirs.find("subtest") != pwd->childDirs["test"]->childDirs.cend());
+	ASSERT_TRUE(pwd->childDirs.find("test2") != pwd->childDirs.cend());
 	EXPECT_TRUE(pwd->childDirs["test2"]->files.find("test1.txt") != pwd->childDirs["test2"]->files.cend());
 }

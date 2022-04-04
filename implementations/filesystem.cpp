@@ -132,7 +132,7 @@ namespace implementations {
 		throw std::invalid_argument(fileToRemove + " does not exist");
 	}
 
-	std::shared_ptr<FileSystem::File> FileSystem::moveFile(std::string&& sourcePath, std::string&& destPath) {
+	std::shared_ptr<FileSystem::File> FileSystem::copyFile(std::string&& sourcePath, std::string&& destPath, const bool shouldRemoveOriginal) {
 		SplitPath splitPath = tokenisePath(std::move(destPath));
 		const std::string destFile = splitPath.back();
 		if (destFile.empty()) {
@@ -142,18 +142,27 @@ namespace implementations {
 		std::shared_ptr<Directory> moveDestDir = getDirectory(std::move(splitPath), false);
 		if (moveDestDir->childDirs.find(destFile) == moveDestDir->childDirs.cend()
 			&& moveDestDir->files.find(destFile) == moveDestDir->files.cend()) {
-			const std::shared_ptr<File> removedFile = removeFile(std::move(sourcePath));
-			removedFile->name = destFile;
-			if (removedFile->isDirectory()) {
-				moveDestDir->childDirs.emplace(destFile, dynamic_pointer_cast<Directory>(removedFile));
+			const std::shared_ptr<File> copiedFile = 
+				shouldRemoveOriginal ? removeFile(std::move(sourcePath)) : getDirectory(tokenisePath(std::move(sourcePath)), false);
+			copiedFile->name = destFile;
+			if (copiedFile->isDirectory()) {
+				moveDestDir->childDirs.emplace(destFile, dynamic_pointer_cast<Directory>(copiedFile));
 			}
 			else {
-				moveDestDir->files.emplace(destFile, removedFile);
+				moveDestDir->files.emplace(destFile, copiedFile);
 			}
-			return removedFile;
+			return copiedFile;
 		}
 		else {
 			throw std::invalid_argument(destFile + " already exists");
 		}
+	}
+
+	std::shared_ptr<FileSystem::File> FileSystem::copyFile(std::string&& sourcePath, std::string&& destPath) {
+		return copyFile(std::move(sourcePath), std::move(destPath), false);
+	}
+
+	std::shared_ptr<FileSystem::File> FileSystem::moveFile(std::string&& sourcePath, std::string&& destPath) {
+		return copyFile(std::move(sourcePath), std::move(destPath), true);
 	}
 }
