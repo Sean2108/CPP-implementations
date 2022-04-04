@@ -48,7 +48,7 @@ namespace implementations {
 		return splitPath;
 	}
 
-	std::shared_ptr<FileSystem::Directory> FileSystem::getDirectory(SplitPath&& splitPath) const {
+	std::shared_ptr<FileSystem::Directory> FileSystem::getDirectory(SplitPath&& splitPath, const bool shouldCreateMissingDirectories) const {
 		if (splitPath.empty()) {
 			return m_pwd;
 		}
@@ -71,6 +71,10 @@ namespace implementations {
 					}
 					currentDir = nextDirIt->second;
 				}
+				else if (shouldCreateMissingDirectories) {
+					currentDir->childDirs.emplace(token, std::make_shared<Directory>(token, currentDir));
+					currentDir = currentDir->childDirs[token];
+				}
 				else {
 					throw std::invalid_argument(token + " is not recognised");
 				}
@@ -79,28 +83,50 @@ namespace implementations {
 		return currentDir;
 	}
 
-	std::shared_ptr<FileSystem::File> FileSystem::makeFile(std::string&& pathToNewDir, const bool isDirectory) {
+	std::shared_ptr<FileSystem::File> FileSystem::makeFile(std::string&& pathToNewDir, const bool isDirectory, const bool shouldCreateMissingDirectories) {
 		SplitPath splitPath = tokenisePath(std::move(pathToNewDir));
 		const std::string fileToCreate = splitPath.back();
+		if (fileToCreate.empty()) {
+			throw std::invalid_argument("Create path is invalid");
+		}
 		splitPath.pop_back();
-		std::shared_ptr<Directory> dirToCreateIn = getDirectory(std::move(splitPath));
+		std::shared_ptr<Directory> dirToCreateIn = getDirectory(std::move(splitPath), shouldCreateMissingDirectories);
 		if (dirToCreateIn->childDirs.find(fileToCreate) == dirToCreateIn->childDirs.cend()
 			&& dirToCreateIn->files.find(fileToCreate) == dirToCreateIn->files.cend()) {
 			if (isDirectory) {
-				const auto createdDir = make_shared<FileSystem::Directory>(fileToCreate, dirToCreateIn);
-				dirToCreateIn->childDirs.emplace(fileToCreate, createdDir);
-				return createdDir;
+				dirToCreateIn->childDirs.emplace(fileToCreate, make_shared<FileSystem::Directory>(fileToCreate, dirToCreateIn));
+				return dirToCreateIn->childDirs[fileToCreate];
 			}
 			else {
-				const auto createdFile = make_shared<FileSystem::File>(fileToCreate);
-				dirToCreateIn->files.emplace(fileToCreate, createdFile);
-				return createdFile;
+				dirToCreateIn->files.emplace(fileToCreate, make_shared<FileSystem::File>(fileToCreate));
+				return dirToCreateIn->files[fileToCreate];
 			}
 		}
 		throw std::invalid_argument(fileToCreate + " already exists");
 	}
 
 	std::shared_ptr<FileSystem::Directory> FileSystem::changeDirectory(std::string&& path) {
-		return m_pwd = getDirectory(tokenisePath(std::move(path)));
+		return m_pwd = getDirectory(tokenisePath(std::move(path)), false);
+	}
+
+	void FileSystem::removeFile(std::string&& pathToRemove) {
+		SplitPath splitPath = tokenisePath(std::move(pathToRemove));
+		const std::string fileToRemove = splitPath.back();
+		if (fileToRemove.empty()) {
+			throw std::invalid_argument("Remove path is invalid");
+		}
+		splitPath.pop_back();
+		std::shared_ptr<Directory> dirToRemoveFrom = getDirectory(std::move(splitPath), false);
+		const auto& removeDirIt = dirToRemoveFrom->childDirs.find(fileToRemove);
+		if (removeDirIt != dirToRemoveFrom->childDirs.cend()) {
+			dirToRemoveFrom->childDirs.erase(removeDirIt);
+			return;
+		}
+		const auto& removeFileIt = dirToRemoveFrom->files.find(fileToRemove);
+		if (removeFileIt != dirToRemoveFrom->files.cend()) {
+			dirToRemoveFrom->files.erase(removeFileIt);
+			return;
+		}
+		throw std::invalid_argument(fileToRemove + " does not exist");
 	}
 }

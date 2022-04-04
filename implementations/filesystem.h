@@ -32,15 +32,16 @@ namespace implementations {
 		using SplitPath = std::vector<std::string>;
 
 		SplitPath tokenisePath(std::string&& path) const;
-		std::shared_ptr<Directory> getDirectory(SplitPath&& splitPath) const;
+		std::shared_ptr<Directory> getDirectory(SplitPath&& splitPath, const bool shouldCreateMissingDirectories) const;
 	public:
 		FileSystem();
 
 		const std::shared_ptr<Directory> getRoot() const;
 		std::shared_ptr<Directory> getPwd() const;
 
-		std::shared_ptr<File> makeFile(std::string&& pathToNewFile, const bool isDirectory);
+		std::shared_ptr<File> makeFile(std::string&& pathToNewFile, const bool isDirectory, const bool shouldCreateMissingDirectories = false);
 		std::shared_ptr<Directory> changeDirectory(std::string&& path);
+		void removeFile(std::string&& pathToRemove);
 	};
 }
 
