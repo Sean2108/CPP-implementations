@@ -12,7 +12,7 @@ TEST(FileSystemTest, CreateBlankFileSystem) {
 	const auto pwd = filesystem.getPwd();
 
 	// THEN
-	EXPECT_EQ("/", pwd->name);
+	EXPECT_EQ("root", pwd->name);
 	EXPECT_TRUE(pwd->files.empty());
 }
 
@@ -25,7 +25,7 @@ TEST(FileSystemTest, CreateFileAbsolutePath) {
 	const auto pwd = filesystem.getPwd();
 
 	// THEN
-	EXPECT_EQ("/", pwd->name);
+	EXPECT_EQ("root", pwd->name);
 	ASSERT_EQ(1, pwd->files.size());
 	ASSERT_TRUE(pwd->files.find("test") != pwd->files.cend());
 	EXPECT_FALSE(pwd->files["test"]->isDirectory());
@@ -42,7 +42,7 @@ TEST(FileSystemTest, CreateDirectoryRelativePath) {
 	const auto pwd = filesystem.getPwd();
 
 	// THEN
-	EXPECT_EQ("/", pwd->name);
+	EXPECT_EQ("root", pwd->name);
 	ASSERT_EQ(1, pwd->childDirs.size());
 	EXPECT_TRUE(pwd->childDirs["test"]->isDirectory());
 	ASSERT_EQ(1, pwd->childDirs["test"]->files.size());
@@ -77,7 +77,7 @@ TEST(FileSystemTest, CreateFileRecursively) {
 	const auto pwd = filesystem.getPwd();
 
 	// THEN
-	EXPECT_EQ("/", pwd->name);
+	EXPECT_EQ("root", pwd->name);
 	ASSERT_EQ(1, pwd->childDirs.size());
 	EXPECT_TRUE(pwd->childDirs["test"]->isDirectory());
 	ASSERT_EQ(1, pwd->childDirs["test"]->childDirs.size());
@@ -138,4 +138,17 @@ TEST(FileSystemTest, CopyDirectory) {
 	EXPECT_TRUE(pwd->childDirs["test"]->childDirs.find("subtest") != pwd->childDirs["test"]->childDirs.cend());
 	ASSERT_TRUE(pwd->childDirs.find("test2") != pwd->childDirs.cend());
 	EXPECT_TRUE(pwd->childDirs["test2"]->files.find("test1.txt") != pwd->childDirs["test2"]->files.cend());
+}
+
+TEST(FileSystemTest, PrintTree) {
+	// GIVEN
+	FileSystem filesystem;
+
+	// WHEN
+	filesystem.makeFile("test/test1.txt", false, true);
+	filesystem.makeFile("test/subtest/test1.txt", false, true);
+
+	// THEN
+	EXPECT_EQ("test\n\ttest1.txt\n\tsubtest\n\t\ttest1.txt", filesystem.printTree("test"));
+	EXPECT_EQ("root\n\ttest\n\t\ttest1.txt\n\t\tsubtest\n\t\t\ttest1.txt", filesystem.printTree("/"));
 }

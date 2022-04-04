@@ -23,7 +23,7 @@ namespace implementations {
 	}
 
 	FileSystem::FileSystem()
-		: m_root(std::make_shared<Directory>("/", nullptr))
+		: m_root(std::make_shared<Directory>("root", nullptr))
 		, m_pwd(m_root) {}
 
 	const std::shared_ptr<FileSystem::Directory> FileSystem::getRoot() const {
@@ -142,7 +142,7 @@ namespace implementations {
 		std::shared_ptr<Directory> moveDestDir = getDirectory(std::move(splitPath), false);
 		if (moveDestDir->childDirs.find(destFile) == moveDestDir->childDirs.cend()
 			&& moveDestDir->files.find(destFile) == moveDestDir->files.cend()) {
-			const std::shared_ptr<File> copiedFile = 
+			const std::shared_ptr<File> copiedFile =
 				shouldRemoveOriginal ? removeFile(std::move(sourcePath)) : getDirectory(tokenisePath(std::move(sourcePath)), false);
 			copiedFile->name = destFile;
 			if (copiedFile->isDirectory()) {
@@ -164,5 +164,21 @@ namespace implementations {
 
 	std::shared_ptr<FileSystem::File> FileSystem::moveFile(std::string&& sourcePath, std::string&& destPath) {
 		return copyFile(std::move(sourcePath), std::move(destPath), true);
+	}
+
+	std::string FileSystem::printTree(const std::shared_ptr<Directory>& dir, const size_t numIndents) const {
+		std::string output = std::string(numIndents, '\t') + dir->name;
+		for (const auto& [name, filePtr] : dir->files) {
+			output += "\n" + std::string(numIndents + 1, '\t') + name;
+		}
+		for (const auto& [name, dirPtr] : dir->childDirs) {
+			output += "\n" + printTree(dirPtr, numIndents + 1);
+		}
+		return output;
+	}
+
+	std::string FileSystem::printTree(std::string&& path) const {
+		const std::shared_ptr<Directory> currentDir = getDirectory(tokenisePath(std::move(path)), false);
+		return printTree(currentDir, 0);
 	}
 }

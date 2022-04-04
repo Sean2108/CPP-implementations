@@ -34,6 +34,7 @@ namespace implementations {
 		SplitPath tokenisePath(std::string&& path) const;
 		std::shared_ptr<Directory> getDirectory(SplitPath&& splitPath, const bool shouldCreateMissingDirectories) const;
 		std::shared_ptr<File> copyFile(std::string&& sourcePath, std::string&& destPath, const bool shouldRemoveOriginal);
+		std::string printTree(const std::shared_ptr<Directory>& dir, const size_t numIndents) const;
 	public:
 		FileSystem();
 
@@ -45,6 +46,7 @@ namespace implementations {
 		std::shared_ptr<File> removeFile(std::string&& pathToRemove);
 		std::shared_ptr<File> moveFile(std::string&& sourcePath, std::string&& destPath);
 		std::shared_ptr<File> copyFile(std::string&& sourcePath, std::string&& destPath);
+		std::string printTree(std::string&& path) const;
 	};
 }
 
