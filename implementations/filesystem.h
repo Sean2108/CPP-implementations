@@ -2,7 +2,7 @@
 
 #include <memory>
 #include <string>
-#include <vector>
+#include <unordered_map>
 
 namespace implementations {
 	class FileSystem
@@ -17,21 +17,30 @@ namespace implementations {
 
 		struct Directory : public File {
 			std::shared_ptr<Directory> parent;
-			std::vector<File> files;
+			std::unordered_map<std::string, std::shared_ptr<File>> files;
+			std::unordered_map<std::string, std::shared_ptr<Directory>> childDirs;
 
-			Directory(const std::string& name);
+			Directory(const std::string& name, const std::shared_ptr<Directory>& parent);
 
 			bool isDirectory() override;
 		};
 
-		std::shared_ptr<Directory> m_root;
+		const std::shared_ptr<Directory> m_root;
 		// present working directory
 		std::shared_ptr<Directory> m_pwd;
+
+		using SplitPath = std::vector<std::string>;
+
+		SplitPath tokenisePath(std::string&& path) const;
+		std::shared_ptr<Directory> getDirectory(SplitPath&& splitPath) const;
 	public:
 		FileSystem();
 
-		std::shared_ptr<Directory> getRoot() const;
+		const std::shared_ptr<Directory> getRoot() const;
 		std::shared_ptr<Directory> getPwd() const;
+
+		std::shared_ptr<File> makeFile(std::string&& pathToNewFile, const bool isDirectory);
+		std::shared_ptr<Directory> changeDirectory(std::string&& path);
 	};
 }
 
