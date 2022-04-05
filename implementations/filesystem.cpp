@@ -1,8 +1,14 @@
 #include "filesystem.h"
 
 #include <algorithm>
+#include <future>
+#include <numeric>
 #include <sstream>
 #include <stdexcept>
+
+namespace {
+	const size_t PARALLELISATION_THRESHOLD = 2;
+}
 
 namespace implementations {
 	FileSystem::File::File(const std::string& name)
@@ -166,19 +172,69 @@ namespace implementations {
 		return copyFile(std::move(sourcePath), std::move(destPath), true);
 	}
 
-	std::string FileSystem::printTree(const std::shared_ptr<Directory>& dir, const size_t numIndents) const {
+	std::string FileSystem::printTreeRecursive(const std::shared_ptr<Directory>& dir, const size_t numIndents) const {
 		std::string output = std::string(numIndents, '\t') + dir->name;
 		for (const auto& [name, filePtr] : dir->files) {
 			output += "\n" + std::string(numIndents + 1, '\t') + name;
 		}
 		for (const auto& [name, dirPtr] : dir->childDirs) {
-			output += "\n" + printTree(dirPtr, numIndents + 1);
+			output += "\n" + printTreeRecursive(dirPtr, numIndents + 1);
 		}
 		return output;
 	}
 
 	std::string FileSystem::printTree(std::string&& path) const {
 		const std::shared_ptr<Directory> currentDir = getDirectory(tokenisePath(std::move(path)), false);
-		return printTree(currentDir, 0);
+		if (currentDir->childDirs.size() < PARALLELISATION_THRESHOLD) {
+			return printTreeRecursive(currentDir, 0);
+		}
+		return std::transform_reduce(currentDir->childDirs.cbegin(), currentDir->childDirs.cend(), currentDir->name,
+			[](const auto& accumulator, const auto& str) {return accumulator + '\n' + str; },
+			[this](const auto& childDir) {return std::async(std::launch::async, &FileSystem::printTreeRecursive, this, std::ref(childDir.second), 1).get(); });
+	}
+
+	std::string FileSystem::getCurrentPath() const {
+		auto curDir = m_pwd;
+		std::string path;
+		while (curDir->parent) {
+			path = '/' + curDir->name + path;
+			curDir = curDir->parent;
+		}
+		return path;
+	}
+
+	std::vector<std::string> FileSystem::findFileRecursive(const std::shared_ptr<Directory>& dir, std::string currentPath, const std::string& fileName) const {
+		std::vector<std::string> filePaths;
+		for (const auto& [dirName, childDir] : dir->childDirs) {
+			const auto childPaths = findFileRecursive(childDir, currentPath + '/' + dirName, fileName);
+			if (childPaths.empty()) {
+				continue;
+			}
+			filePaths.reserve(filePaths.size() + childPaths.size());
+			filePaths.insert(filePaths.end(), childPaths.begin(), childPaths.end());
+		}
+		if (dir->files.find(fileName) != dir->files.cend()) {
+			filePaths.push_back(currentPath + '/' + fileName);
+		}
+		return filePaths;
+	}
+
+	std::vector<std::string> FileSystem::findFile(std::string&& fileName) const {
+		auto currentDir = m_root;
+		if (currentDir->childDirs.size() < PARALLELISATION_THRESHOLD) {
+			return findFileRecursive(currentDir, "", fileName);
+		}
+		std::vector<std::string> filePaths;
+		return std::transform_reduce(currentDir->childDirs.cbegin(), currentDir->childDirs.cend(), filePaths,
+			[](const auto& accumulator, const auto& curVector) {
+				if (curVector.empty()) {
+					return accumulator;
+				}
+				std::vector<std::string> combined(accumulator.size() + curVector.size());
+				const auto prevEnd = std::copy(accumulator.cbegin(), accumulator.cend(), combined.begin());
+				std::copy(curVector.cbegin(), curVector.cend(), prevEnd);
+				return combined;
+			},
+			[this, &fileName](const auto& childDir) {return std::async(std::launch::async, &FileSystem::findFileRecursive, this, std::ref(childDir.second), "", std::cref(fileName)).get(); });
 	}
 }

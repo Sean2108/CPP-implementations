@@ -34,7 +34,8 @@ namespace implementations {
 		SplitPath tokenisePath(std::string&& path) const;
 		std::shared_ptr<Directory> getDirectory(SplitPath&& splitPath, const bool shouldCreateMissingDirectories) const;
 		std::shared_ptr<File> copyFile(std::string&& sourcePath, std::string&& destPath, const bool shouldRemoveOriginal);
-		std::string printTree(const std::shared_ptr<Directory>& dir, const size_t numIndents) const;
+		std::string printTreeRecursive(const std::shared_ptr<Directory>& dir, const size_t numIndents) const;
+		std::vector<std::string> findFileRecursive(const std::shared_ptr<Directory>& dir, std::string currentPath, const std::string& fileName) const;
 	public:
 		FileSystem();
 
@@ -47,6 +48,8 @@ namespace implementations {
 		std::shared_ptr<File> moveFile(std::string&& sourcePath, std::string&& destPath);
 		std::shared_ptr<File> copyFile(std::string&& sourcePath, std::string&& destPath);
 		std::string printTree(std::string&& path) const;
+		std::string getCurrentPath() const;
+		std::vector<std::string> findFile(std::string&& fileName) const;
 	};
 }
 

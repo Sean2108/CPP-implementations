@@ -152,3 +152,63 @@ TEST(FileSystemTest, PrintTree) {
 	EXPECT_EQ("test\n\ttest1.txt\n\tsubtest\n\t\ttest1.txt", filesystem.printTree("test"));
 	EXPECT_EQ("root\n\ttest\n\t\ttest1.txt\n\t\tsubtest\n\t\t\ttest1.txt", filesystem.printTree("/"));
 }
+
+TEST(FileSystemTest, PrintTreeParallel) {
+	// GIVEN
+	FileSystem filesystem;
+
+	// WHEN
+	filesystem.makeFile("test/test1.txt", false, true);
+	filesystem.makeFile("test2/subtest/test2.txt", false, true);
+	filesystem.makeFile("test3/subtest/test3.txt", false, true);
+
+	// THEN
+	EXPECT_EQ("root\n\ttest2\n\t\tsubtest\n\t\t\ttest2.txt\n\ttest\n\t\ttest1.txt\n\ttest3\n\t\tsubtest\n\t\t\ttest3.txt", filesystem.printTree("/"));
+}
+
+TEST(FileSystemTest, GetCurrentPath) {
+	// GIVEN
+	FileSystem filesystem;
+
+	// WHEN
+	filesystem.makeFile("a/b/c/d/e/f.txt", false, true);
+	filesystem.changeDirectory("a/b/c/d/e");
+	const auto currentPath = filesystem.getCurrentPath();
+
+	// THEN
+	EXPECT_EQ("/a/b/c/d/e", currentPath);
+}
+
+TEST(FileSystemTest, FindFile) {
+	// GIVEN
+	FileSystem filesystem;
+
+	// WHEN
+	filesystem.makeFile("a/b/c/d/e/f.txt", false, true);
+	const auto foundPaths = filesystem.findFile("f.txt");
+
+	// THEN
+	ASSERT_EQ(1, foundPaths.size());
+	EXPECT_EQ("/a/b/c/d/e/f.txt", foundPaths[0]);
+}
+
+TEST(FileSystemTest, FindFileParallel) {
+	// GIVEN
+	FileSystem filesystem;
+
+	// WHEN
+	filesystem.makeFile("a/b/c/d/e/f.txt", false, true);
+	filesystem.makeFile("a/g/f.txt", false, true);
+	filesystem.makeFile("a/g/k.txt", false, true);
+	filesystem.makeFile("a/h/i/f.txt", false, true);
+	filesystem.makeFile("a/h/i/n.txt", false, true);
+	filesystem.makeFile("a/q.txt", false, true);
+	auto foundPaths = filesystem.findFile("f.txt");
+
+	// THEN
+	ASSERT_EQ(3, foundPaths.size());
+	sort(foundPaths.begin(), foundPaths.end());
+	EXPECT_EQ("/a/b/c/d/e/f.txt", foundPaths[0]);
+	EXPECT_EQ("/a/g/f.txt", foundPaths[1]);
+	EXPECT_EQ("/a/h/i/f.txt", foundPaths[2]);
+}
