@@ -15,11 +15,15 @@ namespace implementations {
 	*/
 	class OrderBookHeapImpl : public OrderBook
 	{
-		std::priority_queue<Order> m_buyOrdersMaxHeap;
-		std::priority_queue<Order, std::vector<Order>, std::greater<Order>> m_sellOrdersMinHeap;
+		static bool minHeapComparator(const Order& a, const Order& b);
+		static bool maxHeapComparator(const Order& a, const Order& b);
 
-		template <class T>
-		std::vector<Order> getMatchedOrders(Order& order, T& matchingHeap, QuantityPriceMap& quantityPriceMap, const bool isBuy);
+		using PriorityQueue = std::priority_queue<Order, std::vector<Order>, decltype(&OrderBookHeapImpl::maxHeapComparator)>;
+
+		PriorityQueue m_buyOrdersMaxHeap;
+		PriorityQueue m_sellOrdersMinHeap;
+
+		std::vector<Order> getMatchedOrders(Order& order, PriorityQueue& matchingHeap, QuantityPriceMap& quantityPriceMap, const bool isBuy);
 	public:
 		OrderBookHeapImpl();
 
@@ -29,33 +33,6 @@ namespace implementations {
 		std::optional<Order> getBestBidOrder() const override;
 		std::optional<Order> getBestAskOrder() const override;
 	};
-
-	template <class T>
-	std::vector<Order> OrderBookHeapImpl::getMatchedOrders(Order& order, T& matchingHeap, QuantityPriceMap& quantityMap, const bool isBuy) {
-		std::vector<Order> matchedOrders;
-		while (!matchingHeap.empty()
-			&& (isBuy && matchingHeap.top().price <= order.price
-				|| !isBuy && matchingHeap.top().price >= order.price)) {
-			Order matchedOrder = matchingHeap.top();
-			matchingHeap.pop();
-			// partial fill
-			if (order.quantity < matchedOrder.quantity) {
-				matchedOrder.quantity -= order.quantity;
-				matchingHeap.push(matchedOrder);
-				matchedOrder.quantity = order.quantity;
-				matchedOrders.push_back(matchedOrder);
-				quantityMap[matchedOrder.price] -= order.quantity;
-				order.quantity = 0;
-				break;
-			}
-			else {
-				order.quantity -= matchedOrder.quantity;
-				quantityMap[matchedOrder.price] -= matchedOrder.quantity;
-				matchedOrders.push_back(std::move(matchedOrder));
-			}
-		}
-		return matchedOrders;
-	}
 }
 
 

@@ -1,11 +1,45 @@
 #include "orderbook_heapimpl.h"
 
 namespace implementations {
+
+	bool OrderBookHeapImpl::minHeapComparator(const Order& a, const Order& b) {
+		return std::tie(a.price, a.timestamp, a.quantity) > std::tie(b.price, b.timestamp, b.quantity);
+	}
+
+	bool OrderBookHeapImpl::maxHeapComparator(const Order& a, const Order& b) {
+		return std::forward_as_tuple(a.price, -int(a.timestamp), a.quantity) < std::forward_as_tuple(b.price, -int(b.timestamp), b.quantity);
+	}
+
 	OrderBookHeapImpl::OrderBookHeapImpl()
 		: OrderBook()
-		, m_buyOrdersMaxHeap()
-		, m_sellOrdersMinHeap() {}
+		, m_buyOrdersMaxHeap(maxHeapComparator)
+		, m_sellOrdersMinHeap(minHeapComparator) {}
 
+	std::vector<Order> OrderBookHeapImpl::getMatchedOrders(Order& order, PriorityQueue& matchingHeap, QuantityPriceMap& quantityMap, const bool isBuy) {
+		std::vector<Order> matchedOrders;
+		while (!matchingHeap.empty()
+			&& (isBuy && matchingHeap.top().price <= order.price
+				|| !isBuy && matchingHeap.top().price >= order.price)) {
+			Order matchedOrder = matchingHeap.top();
+			matchingHeap.pop();
+			// partial fill
+			if (order.quantity < matchedOrder.quantity) {
+				matchedOrder.quantity -= order.quantity;
+				matchingHeap.push(matchedOrder);
+				matchedOrder.quantity = order.quantity;
+				matchedOrders.push_back(matchedOrder);
+				quantityMap[matchedOrder.price] -= order.quantity;
+				order.quantity = 0;
+				break;
+			}
+			else {
+				order.quantity -= matchedOrder.quantity;
+				quantityMap[matchedOrder.price] -= matchedOrder.quantity;
+				matchedOrders.push_back(std::move(matchedOrder));
+			}
+		}
+		return matchedOrders;
+	}
 
 	std::vector<Order> OrderBookHeapImpl::addBuyOrder(Order&& order) {
 		const std::vector<Order> matchedOrders = getMatchedOrders(order, m_sellOrdersMinHeap, m_quantityAtAskPrice, true);
