@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
+#include <mutex>
 #include <optional>
+#include <vector>
 #include <unordered_map>
 
 namespace implementations {
@@ -22,6 +23,8 @@ namespace implementations {
 	class OrderBook {
 	protected:
 		QuantityPriceMap m_quantityAtBidPrice, m_quantityAtAskPrice;
+		mutable std::mutex m_buyOrderMutex;
+		mutable std::mutex m_sellOrderMutex;
 	public:
 		OrderBook();
 		virtual std::vector<Order> addBuyOrder(Order&& order) = 0;

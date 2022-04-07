@@ -11,6 +11,7 @@ namespace implementations {
 		, m_sellOrders() {}
 
 	std::vector<Order> OrderBookLinkedListMapImpl::getMatchedOrders(Order& order, LinkedListMap& matchingOrders, QuantityPriceMap& matchingQuantityMap, const bool isBuy) {
+		std::lock_guard<std::mutex> lock(isBuy ? m_sellOrderMutex : m_buyOrderMutex);
 		std::vector<Order> matchedOrders;
 		while (!matchingOrders.empty() &&
 			// compare against largest buy or smallest sell, depending on the side
@@ -45,7 +46,7 @@ namespace implementations {
 	void OrderBookLinkedListMapImpl::addOrderNode(Order&& order, LinkedListMap& sideMap) {
 		const size_t price = order.price;
 		auto it = sideMap.find(price);
-		const OrderNodePtr newOrderNode = std::make_shared<OrderNode>(std::move(order));
+		OrderNodePtr newOrderNode = std::make_shared<OrderNode>(std::move(order));
 		if (it != sideMap.cend()) {
 			OrderNodePtr currentNode = it->second;
 			while (currentNode && currentNode->next) {
@@ -61,6 +62,7 @@ namespace implementations {
 	std::vector<Order> OrderBookLinkedListMapImpl::addBuyOrder(Order&& order) {
 		const std::vector<Order> matchedOrders = getMatchedOrders(order, m_sellOrders, m_quantityAtAskPrice, true);
 		if (order.quantity > 0) {
+			std::lock_guard<std::mutex> lock(m_buyOrderMutex);
 			m_quantityAtBidPrice[order.price] += order.quantity;
 			addOrderNode(std::move(order), m_buyOrders);
 		}
@@ -70,6 +72,7 @@ namespace implementations {
 	std::vector<Order> OrderBookLinkedListMapImpl::addSellOrder(Order&& order) {
 		const std::vector<Order> matchedOrders = getMatchedOrders(order, m_buyOrders, m_quantityAtBidPrice, false);
 		if (order.quantity > 0) {
+			std::lock_guard<std::mutex> lock(m_sellOrderMutex);
 			m_quantityAtAskPrice[order.price] += order.quantity;
 			addOrderNode(std::move(order), m_sellOrders);
 		}
@@ -77,6 +80,7 @@ namespace implementations {
 	}
 
 	std::optional<Order> OrderBookLinkedListMapImpl::getBestBidOrder() const {
+		std::lock_guard<std::mutex> lock(m_buyOrderMutex);
 		if (m_buyOrders.empty()) {
 			return {};
 		}
@@ -84,6 +88,7 @@ namespace implementations {
 	}
 
 	std::optional<Order> OrderBookLinkedListMapImpl::getBestAskOrder() const {
+		std::lock_guard<std::mutex> lock(m_sellOrderMutex);
 		if (m_sellOrders.empty()) {
 			return {};
 		}

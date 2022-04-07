@@ -70,6 +70,7 @@ namespace implementations {
 	}
 
 	int String::find(const String& otherString) const {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		char* substring = strstr(m_data, otherString.m_data);
 		if (!substring) {
 			return -1;
@@ -78,6 +79,7 @@ namespace implementations {
 	}
 
 	char& String::operator[](const size_t i) const {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		if (i >= m_size) {
 			throw std::runtime_error("Index out of bounds");
 		}
@@ -85,6 +87,7 @@ namespace implementations {
 	}
 
 	void String::push_back(const char c) {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_size + 1 == m_capacity) {
 			reserve(m_capacity * 2);
 		}
@@ -97,6 +100,7 @@ namespace implementations {
 	}
 
 	void String::reserve(const size_t newCapacity) {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_capacity < newCapacity) {
 			m_capacity = newCapacity;
 			char* newString = new char[m_capacity];

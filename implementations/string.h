@@ -1,5 +1,6 @@
 #pragma once
 
+#include <mutex>
 #include <ostream>
 
 namespace implementations {
@@ -7,6 +8,7 @@ namespace implementations {
 		size_t m_size;
 		size_t m_capacity;
 		char* m_data;
+		mutable std::mutex m_mutex;
 
 	public:
 		// constructors

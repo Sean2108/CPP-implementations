@@ -29,6 +29,7 @@ namespace implementations {
 	OrderBook::OrderBook() : m_quantityAtAskPrice(), m_quantityAtBidPrice() {}
 
 	size_t OrderBook::getQuantityAtBidPrice(const size_t price) const {
+		std::lock_guard<std::mutex> lock(m_buyOrderMutex);
 		const auto it = m_quantityAtBidPrice.find(price);
 		if (it != m_quantityAtBidPrice.cend()) {
 			return it->second;
@@ -37,6 +38,7 @@ namespace implementations {
 	}
 
 	size_t OrderBook::getQuantityAtAskPrice(const size_t price) const {
+		std::lock_guard<std::mutex> lock(m_sellOrderMutex);
 		const auto it = m_quantityAtAskPrice.find(price);
 		if (it != m_quantityAtAskPrice.cend()) {
 			return it->second;

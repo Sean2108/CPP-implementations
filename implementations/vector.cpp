@@ -84,6 +84,7 @@ namespace implementations {
 
 	template <class T>
 	T& Vector<T>::at(const size_t index) {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		if (index >= m_size) {
 			throw std::out_of_range("Index out of bounds");
 		}
@@ -96,6 +97,11 @@ namespace implementations {
 	}
 
 	template <class T>
+	T* Vector<T>::find(const T& value) const {
+		return std::find(m_data, m_data + m_size, value);
+	}
+
+	template <class T>
 	void Vector<T>::clear() {
 		delete[] m_data;
 		m_data = nullptr;
@@ -105,6 +111,7 @@ namespace implementations {
 
 	template <class T>
 	void Vector<T>::reserve(const size_t capacity) {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		if (capacity > m_capacity) {
 			m_capacity = capacity;
 			T* newData = new T[capacity];
@@ -116,6 +123,7 @@ namespace implementations {
 
 	template <class T>
 	void Vector<T>::push_back(T newObj) {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_size == m_capacity) {
 			reserve(m_capacity ? m_capacity * 2 : 1);
 		}
@@ -125,6 +133,7 @@ namespace implementations {
 	template <class T>
 	template <class ...Args>
 	void Vector<T>::emplace_back(Args&&... args) {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_size == m_capacity) {
 			reserve(m_capacity ? m_capacity * 2 : 1);
 		}
@@ -138,6 +147,7 @@ namespace implementations {
 
 	template <class T>
 	T* Vector<T>::erase(T* position) {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		const size_t index = position - m_data;
 		if (index >= m_size || index < 0) {
 			return end();
@@ -149,6 +159,7 @@ namespace implementations {
 
 	template <class T>
 	T* Vector<T>::insert(T* position, const T& value) {
+		std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_size == m_capacity) {
 			m_capacity *= 2;
 		}

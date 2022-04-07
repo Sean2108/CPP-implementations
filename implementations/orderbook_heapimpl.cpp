@@ -17,6 +17,7 @@ namespace implementations {
 
 	std::vector<Order> OrderBookHeapImpl::getMatchedOrders(Order& order, PriorityQueue& matchingHeap, QuantityPriceMap& quantityMap, const bool isBuy) {
 		std::vector<Order> matchedOrders;
+		std::lock_guard<std::mutex> lock(isBuy ? m_sellOrderMutex : m_buyOrderMutex);
 		while (!matchingHeap.empty()
 			&& (isBuy && matchingHeap.top().price <= order.price
 				|| !isBuy && matchingHeap.top().price >= order.price)) {
@@ -44,6 +45,7 @@ namespace implementations {
 	std::vector<Order> OrderBookHeapImpl::addBuyOrder(Order&& order) {
 		const std::vector<Order> matchedOrders = getMatchedOrders(order, m_sellOrdersMinHeap, m_quantityAtAskPrice, true);
 		if (order.quantity > 0) {
+			std::lock_guard<std::mutex> lock(m_buyOrderMutex);
 			m_quantityAtBidPrice[order.price] += order.quantity;
 			m_buyOrdersMaxHeap.push(std::move(order));
 		}
@@ -53,6 +55,7 @@ namespace implementations {
 	std::vector<Order> OrderBookHeapImpl::addSellOrder(Order&& order) {
 		const std::vector<Order> matchedOrders = getMatchedOrders(order, m_buyOrdersMaxHeap, m_quantityAtBidPrice, false);
 		if (order.quantity > 0) {
+			std::lock_guard<std::mutex> lock(m_sellOrderMutex);
 			m_quantityAtAskPrice[order.price] += order.quantity;
 			m_sellOrdersMinHeap.push(std::move(order));
 		}
@@ -60,6 +63,7 @@ namespace implementations {
 	}
 
 	std::optional<Order> OrderBookHeapImpl::getBestBidOrder() const {
+		std::lock_guard<std::mutex> lock(m_buyOrderMutex);
 		if (m_buyOrdersMaxHeap.empty()) {
 			return {};
 		}
@@ -67,6 +71,7 @@ namespace implementations {
 	}
 
 	std::optional<Order> OrderBookHeapImpl::getBestAskOrder() const {
+		std::lock_guard<std::mutex> lock(m_sellOrderMutex);
 		if (m_sellOrdersMinHeap.empty()) {
 			return {};
 		}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <initializer_list>
+#include <mutex>
 
 namespace implementations {
 
@@ -9,6 +10,7 @@ namespace implementations {
 		size_t m_size;
 		size_t m_capacity;
 		T* m_data;
+		std::mutex m_mutex;
 
 	public:
 		// constructors and assignment operators
@@ -28,6 +30,7 @@ namespace implementations {
 		bool empty() const noexcept;
 		T& at(const size_t index);
 		T& operator[](const size_t index);
+		T* find(const T& value) const;
 
 		// modifiers
 		void clear();
