@@ -193,8 +193,12 @@ namespace implementations {
 			return printTreeRecursive(currentDir, 0);
 		}
 		return std::transform_reduce(currentDir->childDirs.cbegin(), currentDir->childDirs.cend(), currentDir->name,
-			[](const auto& accumulator, const auto& str) {return accumulator + '\n' + str; },
-			[this](const auto& childDir) {return std::async(std::launch::async, &FileSystem::printTreeRecursive, this, std::ref(childDir.second), 1).get(); });
+			[](const auto& accumulator, const auto& str) {
+				return accumulator + '\n' + str;
+			},
+			[this](const auto& childDir) {
+				return std::async(std::launch::async, &FileSystem::printTreeRecursive, this, std::ref(childDir.second), 1).get();
+			});
 	}
 
 	std::string FileSystem::getCurrentPath() const {
@@ -239,6 +243,8 @@ namespace implementations {
 				std::copy(curVector.cbegin(), curVector.cend(), prevEnd);
 				return combined;
 			},
-			[this, &fileName](const auto& childDir) {return std::async(std::launch::async, &FileSystem::findFileRecursive, this, std::ref(childDir.second), "", std::cref(fileName)).get(); });
+			[this, &fileName](const auto& childDir) {
+				return std::async(std::launch::async, &FileSystem::findFileRecursive, this, std::ref(childDir.second), "", std::cref(fileName)).get();
+			});
 	}
 }
