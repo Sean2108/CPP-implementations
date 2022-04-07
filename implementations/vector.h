@@ -10,7 +10,7 @@ namespace implementations {
 		size_t m_size;
 		size_t m_capacity;
 		T* m_data;
-		std::mutex m_mutex;
+		std::recursive_mutex m_mutex;
 
 	public:
 		// constructors and assignment operators

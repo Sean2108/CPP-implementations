@@ -87,10 +87,10 @@ namespace implementations {
 	}
 
 	void String::push_back(const char c) {
-		std::lock_guard<std::mutex> lock(m_mutex);
 		if (m_size + 1 == m_capacity) {
 			reserve(m_capacity * 2);
 		}
+		std::lock_guard<std::mutex> lock(m_mutex);
 		m_data[m_size++] = c;
 		m_data[m_size] = '\0';
 	}

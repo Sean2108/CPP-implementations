@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -28,6 +29,7 @@ namespace implementations {
 		const std::shared_ptr<Directory> m_root;
 		// present working directory
 		std::shared_ptr<Directory> m_pwd;
+		std::recursive_mutex m_mutex;
 
 		using SplitPath = std::vector<std::string>;
 

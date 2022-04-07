@@ -90,6 +90,7 @@ namespace implementations {
 	}
 
 	std::shared_ptr<FileSystem::File> FileSystem::makeFile(std::string&& pathToNewDir, const bool isDirectory, const bool shouldCreateMissingDirectories) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
 		SplitPath splitPath = tokenisePath(std::move(pathToNewDir));
 		const std::string fileToCreate = splitPath.back();
 		if (fileToCreate.empty()) {
@@ -112,10 +113,12 @@ namespace implementations {
 	}
 
 	std::shared_ptr<FileSystem::Directory> FileSystem::changeDirectory(std::string&& path) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
 		return m_pwd = getDirectory(tokenisePath(std::move(path)), false);
 	}
 
 	std::shared_ptr<FileSystem::File> FileSystem::removeFile(std::string&& pathToRemove) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
 		SplitPath splitPath = tokenisePath(std::move(pathToRemove));
 		const std::string fileToRemove = splitPath.back();
 		if (fileToRemove.empty()) {
@@ -145,6 +148,7 @@ namespace implementations {
 			throw std::invalid_argument("Move destination path is invalid");
 		}
 		splitPath.pop_back();
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
 		std::shared_ptr<Directory> moveDestDir = getDirectory(std::move(splitPath), false);
 		if (moveDestDir->childDirs.find(destFile) == moveDestDir->childDirs.cend()
 			&& moveDestDir->files.find(destFile) == moveDestDir->files.cend()) {
