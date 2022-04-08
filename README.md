@@ -9,3 +9,4 @@ Some implementations of C++ data structures:
     - heap implementation
     - linked list + unordered map implementation
 - linux file system tree
+- LinkedUnorderedMap (Python's OrderedDict/Java's LinkedHashMap)
