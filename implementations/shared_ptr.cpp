@@ -76,14 +76,14 @@ namespace implementations {
 		m_underlyingPtr = nullptr;
 	}
 
-	template <class T, class ...Args>
-	SharedPtr<T> makeShared(Args&&... args) {
-		return { new T(std::forward<Args>(args)...) };
-	}
-
 	template <class T>
 	void swap(SharedPtr<T>& a, SharedPtr<T>& b) noexcept {
 		std::swap(a.m_underlyingPtr, b.m_underlyingPtr);
 		std::swap(a.m_refCount, b.m_refCount);
+	}
+
+	template <class T, class ...Args>
+	SharedPtr<T> makeShared(Args&&... args) {
+		return { new T(std::forward<Args>(args)...) };
 	}
 }

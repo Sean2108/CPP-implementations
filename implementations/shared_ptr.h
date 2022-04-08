@@ -27,11 +27,11 @@ namespace implementations {
 		void reset() noexcept;
 
 		// free functions
-		template <class Type, class ...Args>
-		friend SharedPtr<Type> makeShared(Args&&... args);
-
 		template <class Type>
 		friend void swap(SharedPtr<Type>& a, SharedPtr<Type>& b) noexcept;
 	};
+
+	template <class T, class ...Args>
+	SharedPtr<T> makeShared(Args&&... args);
 }
 
