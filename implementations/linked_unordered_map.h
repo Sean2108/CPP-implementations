@@ -33,6 +33,7 @@ namespace implementations {
 	public:
 		LinkedUnorderedMap();
 
+		bool hasKey(const K& key) const;
 		V& operator[](const K& key) const;
 		size_t size() const noexcept;
 		bool empty() const noexcept;
@@ -41,7 +42,7 @@ namespace implementations {
 		bool insertAtTail(const K& key, const V& value);
 
 		V remove(const K& key);
-		std::pair<K, V> remove(const bool removeFirstItem = true);
+		std::pair<K, V> remove(const bool removeFirstItem);
 
 		bool moveToEnd(const K& key);
 	};

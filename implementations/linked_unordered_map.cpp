@@ -15,6 +15,12 @@ namespace implementations {
 		, m_length(0)
 		, m_mutex() {}
 
+	template<class K, class V>
+	bool LinkedUnorderedMap<K, V>::hasKey(const K& key) const
+	{
+		return m_nodesMap.find(key) != m_nodesMap.cend();
+	}
+
 	template <class K, class V>
 	V& LinkedUnorderedMap<K, V>::operator[](const K& key) const {
 		std::lock_guard<std::recursive_mutex> lock(m_mutex);
