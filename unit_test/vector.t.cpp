@@ -307,6 +307,22 @@ TEST(VectorBoolTest, InitializerListConstructor) {
 	EXPECT_TRUE(vec[3]);
 }
 
+TEST(VectorBoolTest, EqualsOperator) {
+	// GIVEN
+	Vector<bool> vec1(10, true);
+	// testing that it ignores the false values that are in index 11-16
+	Vector<bool> vec2 = { true, true, true, true, true, true, true, true, true, true };
+	Vector<bool> vec3 = { true, true, true, true, true, true, true, true, true, false };
+
+	// WHEN
+	const bool isEqualExpected = vec1 == vec2;
+	const bool isNotEqualExpected = vec1 != vec3;
+
+	// THEN
+	EXPECT_TRUE(isEqualExpected);
+	EXPECT_TRUE(isNotEqualExpected);
+}
+
 TEST(VectorBoolTest, IteratorConstructor) {
 	// GIVEN
 	const bool bools[9]{ true, false, true, false, true, true, false, false, true };

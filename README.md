@@ -1,7 +1,7 @@
 # C++ Implementations
 
 Some implementations of C++ data structures:
-- std::vector
+- std::vector (with template specialisation for bool)
 - std::string
 - std::shared_ptr
 - std::unique_ptr
