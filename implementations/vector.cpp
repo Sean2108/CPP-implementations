@@ -1,6 +1,7 @@
 #include "vector.h"
 
 #include <algorithm>
+#include <cmath>
 #include <stdexcept>
 
 namespace implementations {
@@ -93,6 +94,7 @@ namespace implementations {
 
 	template <class T>
 	T& Vector<T>::operator[](const size_t index) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
 		return m_data[index];
 	}
 
@@ -102,7 +104,7 @@ namespace implementations {
 	}
 
 	template <class T>
-	void Vector<T>::clear() {
+	void Vector<T>::clear() noexcept {
 		delete[] m_data;
 		m_data = nullptr;
 		m_size = 0;
@@ -206,6 +208,117 @@ namespace implementations {
 	template <class T>
 	void swap(Vector<T>& a, Vector<T>& b) {
 		std::swap(a.m_size, b.m_size);
+		std::swap(a.m_capacity, b.m_capacity);
+		std::swap(a.m_data, b.m_data);
+	}
+
+	Vector<bool>::Vector()
+		: m_size(0)
+		, m_charSize(0)
+		, m_capacity(0)
+		, m_data(nullptr)
+		, m_mutex() {}
+
+	Vector<bool>::Vector(const size_t size, const bool value) 
+		: m_size(size)
+		, m_charSize(std::ceil(static_cast<float>(size) / 8))
+		, m_capacity(m_charSize * 8)
+		, m_data(new char[m_charSize])
+		, m_mutex() {
+		// 11111111 = 2^8 - 1 = 255, fill all ones if default value is true
+		std::fill(m_data, m_data + m_charSize, value ? 255 : 0);
+	}
+
+	Vector<bool>::Vector(std::initializer_list<bool>&& values)
+		: Vector(values.begin(), values.end()) {}
+
+	Vector<bool>::Vector(const bool* const begin, const bool* const end)
+		: Vector(end - begin) {
+		size_t valueIndex = 0;
+		for (const bool* it = begin; it < end; it++) {
+			m_data[valueIndex / 8] <<= 1;
+			m_data[valueIndex++ / 8] |= (*it ? 1 : 0);
+		}
+		// pad excess with 0s
+		m_data[m_charSize - 1] <<= (8 - valueIndex % 8);
+	}
+
+	Vector<bool>::Vector(const Vector<bool>& otherVec)
+		: Vector(otherVec.size()) {
+		std::copy(otherVec.m_data, otherVec.m_data + otherVec.m_charSize, m_data);
+	}
+
+	Vector<bool>::Vector(Vector<bool>&& otherVec) noexcept: Vector() {
+		swap(otherVec, *this);
+	}
+
+	Vector<bool>& Vector<bool>::operator=(const Vector<bool>& otherVec) {
+		Vector<bool> copy = otherVec;
+		swap(*this, copy);
+		return *this;
+	}
+
+	Vector<bool>& Vector<bool>::operator=(Vector<bool>&& otherVec) noexcept {
+		swap(*this, otherVec);
+		otherVec.clear();
+		return *this;
+	}
+
+	Vector<bool>::~Vector() {
+		clear();
+	}
+
+	size_t Vector<bool>::size() const noexcept {
+		return m_size;
+	}
+
+	size_t Vector<bool>::capacity() const noexcept {
+		return m_capacity;
+	}
+
+	bool Vector<bool>::empty() const noexcept {
+		return m_size == 0;
+	}
+
+	bool Vector<bool>::at(const size_t index) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
+		if (index >= m_size) {
+			throw std::out_of_range("Index out of bounds");
+		}
+		return m_data[index];
+	}
+
+	bool Vector<bool>::operator[](const size_t index) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
+		const char bitmask = 1 << (8 - index % 8 - 1);
+		return (m_data[index / 8] & bitmask) == bitmask;
+	}
+
+	void Vector<bool>::clear() noexcept {
+		delete[] m_data;
+		m_data = nullptr;
+		m_size = 0;
+		m_capacity = 0;
+	}
+
+	bool operator==(const Vector<bool>& a, const Vector<bool>& b) {
+		if (a.m_size != b.m_size) {
+			return false;
+		}
+		if (!std::equal(a.m_data, a.m_data + a.m_charSize - 1, b.m_data)) {
+			return false;
+		}
+		return a.m_data[a.m_charSize - 1] >> (a.m_charSize * 8 - a.m_size)
+			== b.m_data[b.m_charSize - 1] >> (b.m_charSize * 8 - b.m_size);
+	}
+
+	bool operator!=(const Vector<bool>& a, const Vector<bool>& b) {
+		return !(a == b);
+	}
+
+	void swap(Vector<bool>& a, Vector<bool>& b) noexcept {
+		std::swap(a.m_size, b.m_size);
+		std::swap(a.m_charSize, b.m_charSize);
 		std::swap(a.m_capacity, b.m_capacity);
 		std::swap(a.m_data, b.m_data);
 	}

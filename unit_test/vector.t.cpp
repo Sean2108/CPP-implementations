@@ -262,3 +262,116 @@ TEST(VectorTest, InsertLastIndex) {
 	EXPECT_EQ(it, vec.end() - 1);
 	EXPECT_EQ(expected, vec);
 }
+
+TEST(VectorBoolTest, DefaultConstructor) {
+	// GIVEN
+
+	// WHEN
+	Vector<bool> vec;
+
+	// THEN
+	EXPECT_EQ(0, vec.size());
+	EXPECT_EQ(0, vec.capacity());
+	EXPECT_TRUE(vec.empty());
+}
+
+TEST(VectorBoolTest, SizeConstructor) {
+	// GIVEN
+
+	// WHEN
+	Vector<bool> vec(5, true);
+
+	// THEN
+	EXPECT_EQ(8, vec.capacity());
+	EXPECT_FALSE(vec.empty());
+	ASSERT_EQ(5, vec.size());
+	for (int i = 0; i < 5; i++) {
+		EXPECT_TRUE(vec[i]);
+	}
+	EXPECT_THROW(vec.at(5), std::out_of_range);
+}
+
+TEST(VectorBoolTest, InitializerListConstructor) {
+	// GIVEN
+
+	// WHEN
+	Vector<bool> vec{ true, false, false, true };
+
+	// THEN
+	EXPECT_EQ(8, vec.capacity());
+	EXPECT_FALSE(vec.empty());
+	ASSERT_EQ(4, vec.size());
+	EXPECT_TRUE(vec[0]);
+	EXPECT_FALSE(vec[1]);
+	EXPECT_FALSE(vec[2]);
+	EXPECT_TRUE(vec[3]);
+}
+
+TEST(VectorBoolTest, IteratorConstructor) {
+	// GIVEN
+	const bool bools[9]{true, false, true, false, true, true, false, false, true};
+
+	// WHEN
+	Vector<bool> vec(std::cbegin(bools), std::cend(bools));
+
+	// THEN
+	EXPECT_EQ(16, vec.capacity());
+	EXPECT_FALSE(vec.empty());
+	ASSERT_EQ(9, vec.size());
+	for (int i = 0; i < 9; i++) {
+		EXPECT_EQ(bools[i], vec[i]);
+	}
+}
+
+TEST(VectorBoolTest, CopyConstructor) {
+	// GIVEN
+	Vector<bool> vec1 = { true, false, true };
+
+	// WHEN
+	Vector<bool> vec2(vec1);
+
+	// THEN
+	EXPECT_EQ(3, vec2.size());
+	EXPECT_EQ(vec2, vec1);
+}
+
+TEST(VectorBoolTest, CopyAssignment) {
+	// GIVEN
+	Vector<bool> vec1 = { true, false, true };
+	Vector<bool> vec2 = { false, true, false };
+
+	// WHEN
+	vec2 = vec1;
+
+	// THEN
+	EXPECT_EQ(vec2, vec1);
+}
+
+TEST(VectorBoolTest, MoveConstructor) {
+	// GIVEN
+	Vector<bool> vec1 = { true, false, true };
+	Vector<bool> vec2 = vec1;
+
+	// WHEN
+	Vector<bool> vec3(std::move(vec1));
+
+	// THEN
+	EXPECT_EQ(3, vec2.size());
+	EXPECT_EQ(vec3, vec2);
+	EXPECT_TRUE(vec1.empty());
+}
+
+TEST(VectorBoolTest, MoveAssignment) {
+	// GIVEN
+	Vector<bool> vec1 = { true, false, true };
+	Vector<bool> vec2 = vec1;
+	Vector<bool> vec3 = { false, true, false };
+
+	// WHEN
+	vec3 = std::move(vec1);
+
+	// THEN
+	EXPECT_EQ(3, vec2.size());
+	EXPECT_EQ(vec3, vec2);
+	EXPECT_TRUE(vec1.empty());
+}
