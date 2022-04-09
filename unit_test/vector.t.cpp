@@ -309,7 +309,7 @@ TEST(VectorBoolTest, InitializerListConstructor) {
 
 TEST(VectorBoolTest, IteratorConstructor) {
 	// GIVEN
-	const bool bools[9]{true, false, true, false, true, true, false, false, true};
+	const bool bools[9]{ true, false, true, false, true, true, false, false, true };
 
 	// WHEN
 	Vector<bool> vec(std::cbegin(bools), std::cend(bools));
@@ -374,4 +374,70 @@ TEST(VectorBoolTest, MoveAssignment) {
 	EXPECT_EQ(3, vec2.size());
 	EXPECT_EQ(vec3, vec2);
 	EXPECT_TRUE(vec1.empty());
+}
+
+TEST(VectorBoolTest, Reserve) {
+	// GIVEN
+	Vector<bool> vec = { true, false, true };
+
+	// WHEN
+	vec.reserve(20);
+
+	// THEN
+	EXPECT_EQ(3, vec.size());
+	EXPECT_EQ(20, vec.capacity());
+}
+
+TEST(VectorBoolTest, PushBackSizeNotMultipleOf8) {
+	// GIVEN
+	Vector<bool> vec = { true, false, true };
+
+	// WHEN
+	vec.push_back(false);
+
+	// THEN
+	EXPECT_EQ(4, vec.size());
+	EXPECT_EQ(8, vec.capacity());
+	EXPECT_FALSE(vec[3]);
+}
+
+TEST(VectorBoolTest, PushBackSizeMultipleOf8) {
+	// GIVEN
+	Vector<bool> vec = { true, false, true, false, false, true, false, false };
+
+	// WHEN
+	vec.push_back(true);
+
+	// THEN
+	EXPECT_EQ(9, vec.size());
+	EXPECT_EQ(16, vec.capacity());
+	EXPECT_TRUE(vec[8]);
+}
+
+TEST(VectorBoolTest, PopBackSizeNotMultipleOf8) {
+	// GIVEN
+	Vector<bool> vec = { true, false, true };
+
+	// WHEN
+	vec.pop_back();
+
+	// THEN
+	EXPECT_EQ(2, vec.size());
+	EXPECT_EQ(8, vec.capacity());
+	EXPECT_FALSE(vec.at(1));
+	EXPECT_THROW(vec.at(2), std::out_of_range);
+}
+
+TEST(VectorBoolTest, PopBackSizeMultipleOf8) {
+	// GIVEN
+	Vector<bool> vec = { true, false, true, false, false, true, false, true, false };
+
+	// WHEN
+	vec.pop_back();
+
+	// THEN
+	EXPECT_EQ(8, vec.size());
+	EXPECT_EQ(16, vec.capacity());
+	EXPECT_TRUE(vec.at(7));
+	EXPECT_THROW(vec.at(8), std::out_of_range);
 }

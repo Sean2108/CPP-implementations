@@ -35,7 +35,8 @@ namespace implementations {
 		// modifiers
 		void clear() noexcept;
 		void reserve(const size_t capacity);
-		void push_back(T newObj);
+		void push_back(const T& newObj);
+		void push_back(T&& newObj);
 		template <class ...Args>
 		void emplace_back(Args&&... args);
 		void pop_back();
@@ -86,6 +87,9 @@ namespace implementations {
 
 		// modifiers
 		void clear() noexcept;
+		void reserve(const size_t capacity);
+		void push_back(const bool value);
+		void pop_back();
 
 		// free functions
 		friend bool operator==(const Vector<bool>& a, const Vector<bool>& b);

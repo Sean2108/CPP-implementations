@@ -124,12 +124,21 @@ namespace implementations {
 	}
 
 	template <class T>
-	void Vector<T>::push_back(T newObj) {
+	void Vector<T>::push_back(const T& newObj) {
 		std::lock_guard<std::recursive_mutex> lock(m_mutex);
 		if (m_size == m_capacity) {
 			reserve(m_capacity ? m_capacity * 2 : 1);
 		}
 		m_data[m_size++] = newObj;
+	}
+
+	template <class T>
+	void Vector<T>::push_back(T&& newObj) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
+		if (m_size == m_capacity) {
+			reserve(m_capacity ? m_capacity * 2 : 1);
+		}
+		m_data[m_size++] = std::move(newObj);
 	}
 
 	template <class T>
@@ -219,7 +228,7 @@ namespace implementations {
 		, m_data(nullptr)
 		, m_mutex() {}
 
-	Vector<bool>::Vector(const size_t size, const bool value) 
+	Vector<bool>::Vector(const size_t size, const bool value)
 		: m_size(size)
 		, m_charSize(std::ceil(static_cast<float>(size) / 8))
 		, m_capacity(m_charSize * 8)
@@ -248,7 +257,7 @@ namespace implementations {
 		std::copy(otherVec.m_data, otherVec.m_data + otherVec.m_charSize, m_data);
 	}
 
-	Vector<bool>::Vector(Vector<bool>&& otherVec) noexcept: Vector() {
+	Vector<bool>::Vector(Vector<bool>&& otherVec) noexcept : Vector() {
 		swap(otherVec, *this);
 	}
 
@@ -285,12 +294,12 @@ namespace implementations {
 		if (index >= m_size) {
 			throw std::out_of_range("Index out of bounds");
 		}
-		return m_data[index];
+		return operator[](index);
 	}
 
 	bool Vector<bool>::operator[](const size_t index) {
 		std::lock_guard<std::recursive_mutex> lock(m_mutex);
-		const char bitmask = 1 << (8 - index % 8 - 1);
+		const char bitmask = 1 << (7 - index % 8);
 		return (m_data[index / 8] & bitmask) == bitmask;
 	}
 
@@ -299,6 +308,40 @@ namespace implementations {
 		m_data = nullptr;
 		m_size = 0;
 		m_capacity = 0;
+	}
+
+	void Vector<bool>::reserve(const size_t capacity) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
+		if (capacity > m_capacity) {
+			m_capacity = capacity;
+			char* newData = new char[std::ceil(static_cast<float>(m_capacity) / 8)];
+			std::copy(m_data, m_data + m_charSize, newData);
+			std::swap(m_data, newData);
+			delete[] newData;
+		}
+	}
+
+	void Vector<bool>::push_back(const bool value) {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
+		if (m_size == m_capacity) {
+			reserve(m_capacity * 2);
+		}
+		if (m_size % 8 == 0) {
+			m_charSize++;
+		}
+		if (value) {
+			m_data[m_charSize - 1] |= 1 << (7 - m_size++ % 8);
+		}
+		else {
+			m_data[m_charSize - 1] &= 255 ^ (1 << (7 - m_size++ % 8));
+		}
+	}
+
+	void Vector<bool>::pop_back() {
+		std::lock_guard<std::recursive_mutex> lock(m_mutex);
+		if (--m_size % 8 == 0) {
+			m_charSize--;
+		}
 	}
 
 	bool operator==(const Vector<bool>& a, const Vector<bool>& b) {
