@@ -35,7 +35,6 @@ namespace implementations {
 		// modifiers
 		void clear() noexcept;
 		void reserve(const size_t capacity);
-		void push_back(const T& newObj);
 		void push_back(T&& newObj);
 		template <class ...Args>
 		void emplace_back(Args&&... args);

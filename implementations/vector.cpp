@@ -124,21 +124,12 @@ namespace implementations {
 	}
 
 	template <class T>
-	void Vector<T>::push_back(const T& newObj) {
-		std::lock_guard<std::recursive_mutex> lock(m_mutex);
-		if (m_size == m_capacity) {
-			reserve(m_capacity ? m_capacity * 2 : 1);
-		}
-		m_data[m_size++] = newObj;
-	}
-
-	template <class T>
 	void Vector<T>::push_back(T&& newObj) {
 		std::lock_guard<std::recursive_mutex> lock(m_mutex);
 		if (m_size == m_capacity) {
 			reserve(m_capacity ? m_capacity * 2 : 1);
 		}
-		m_data[m_size++] = std::move(newObj);
+		m_data[m_size++] = std::forward<T>(newObj);
 	}
 
 	template <class T>
